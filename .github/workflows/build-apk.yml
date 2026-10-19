@@ -25,9 +25,10 @@ jobs:
           flutter-version: '3.24.5'
           channel: 'stable'
 
-      - name: Install Dependencies
+      - name: Configure Android Project and Dependencies
         run: |
           cd mobile_app
+          flutter create --platforms=android --org=com.abuzahra.admin .
           flutter pub get
 
       - name: Build APK (Release)
