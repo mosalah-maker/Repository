@@ -1,22 +1,25 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
+const String kNotificationChannelId = 'abozahra_reservations_v3';
+const String kNotificationChannelName = 'حجوزات وإشعارات أبو زهرة';
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Catch any unexpected flutter framework errors safely
   FlutterError.onError = (FlutterErrorDetails details) {
     debugPrint('Safe Flutter Error: ${details.exceptionAsString()}');
   };
 
-  // Modern transparent status bar
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.light,
@@ -24,7 +27,6 @@ void main() {
     systemNavigationBarIconBrightness: Brightness.light,
   ));
 
-  // Run the application immediately without blocking
   runApp(const AboZahraApp());
 }
 
@@ -66,20 +68,22 @@ class _DashboardWebViewScreenState extends State<DashboardWebViewScreen> {
   void initState() {
     super.initState();
     _initController();
-    _initNotificationsSafely();
+    _initRealNotificationSystem();
   }
 
-  Future<void> _initNotificationsSafely() async {
+  /// Sets up Android High Importance Notification Channel & requests Android 13+ permission dialog
+  Future<void> _initRealNotificationSystem() async {
     try {
+      // 1. Initialize local notifications with default icon
       const AndroidInitializationSettings initializationSettingsAndroid =
-          AndroidInitializationSettings('@mipmap/ic_launcher');
+          AndroidInitializationSettings('ic_launcher');
       const InitializationSettings initializationSettings =
           InitializationSettings(android: initializationSettingsAndroid);
 
       await flutterLocalNotificationsPlugin.initialize(
         initializationSettings,
         onDidReceiveNotificationResponse: (NotificationResponse response) {
-          // Tap on notification
+          debugPrint('Notification tapped: ${response.payload}');
         },
       );
 
@@ -87,22 +91,84 @@ class _DashboardWebViewScreenState extends State<DashboardWebViewScreen> {
           flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
               AndroidFlutterLocalNotificationsPlugin>();
 
+      // 2. Create Heads-Up High Importance Channel
       if (androidPlugin != null) {
-        const AndroidNotificationChannel channel = AndroidNotificationChannel(
-          'abozahra_reservations_v2',
-          'حجوزات وإشعارات أبو زهرة',
+        final AndroidNotificationChannel channel = AndroidNotificationChannel(
+          kNotificationChannelId,
+          kNotificationChannelName,
           description: 'تنبيهات فورية عند وصول حجز جديد أو رفع إسكرين دفع',
           importance: Importance.max,
           playSound: true,
           enableVibration: true,
+          vibrationPattern: Int64List.fromList([0, 500, 200, 500]),
+          showBadge: true,
         );
         await androidPlugin.createNotificationChannel(channel);
+
+        // Request official Android 13+ Notification Permission via plugin
         try {
           await androidPlugin.requestNotificationsPermission();
         } catch (_) {}
       }
+
+      // 3. Request official System Permission dialog via permission_handler (just like WhatsApp)
+      try {
+        final status = await Permission.notification.status;
+        if (!status.isGranted) {
+          final result = await Permission.notification.request();
+          debugPrint('Notification permission status: $result');
+        }
+      } catch (e) {
+        debugPrint('Permission handler check (handled safely): $e');
+      }
+
+      // 4. Send an instant welcome notification after 1.5 seconds so user sees it in action
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        _triggerHeadsUpNotification(
+          '👑 مرحباً بك في Abo Zahra',
+          'تم تفعيل نظام الإشعارات الفورية بنجاح! ستصلك تنبيهات الحجوزات والدفع فوراً.',
+        );
+      });
     } catch (e) {
       debugPrint('Notification setup error (handled safely): $e');
+    }
+  }
+
+  /// Triggers a real heads-up native Android notification with vibration & sound
+  Future<void> _triggerHeadsUpNotification(String title, String message) async {
+    try {
+      final AndroidNotificationDetails androidDetails =
+          AndroidNotificationDetails(
+        kNotificationChannelId,
+        kNotificationChannelName,
+        channelDescription: 'تنبيهات فورية عند وصول حجز جديد أو رفع إسكرين دفع',
+        importance: Importance.max,
+        priority: Priority.high,
+        ticker: 'إشعار Abo Zahra',
+        showWhen: true,
+        enableVibration: true,
+        vibrationPattern: Int64List.fromList([0, 400, 200, 400]),
+        playSound: true,
+        icon: 'ic_notification',
+        styleInformation: BigTextStyleInformation(
+          message,
+          contentTitle: title,
+        ),
+      );
+
+      final NotificationDetails platformDetails =
+          NotificationDetails(android: androidDetails);
+
+      final int notifId = DateTime.now().millisecondsSinceEpoch % 100000;
+      await flutterLocalNotificationsPlugin.show(
+        notifId,
+        title,
+        message,
+        platformDetails,
+      );
+      debugPrint('Native notification dispatched successfully [ID: $notifId]');
+    } catch (e) {
+      debugPrint('Error triggering local notification: $e');
     }
   }
 
@@ -113,11 +179,7 @@ class _DashboardWebViewScreenState extends State<DashboardWebViewScreen> {
       ..setNavigationDelegate(
         NavigationDelegate(
           onProgress: (int progress) {
-            if (mounted) {
-              setState(() {
-                _progress = progress / 100.0;
-              });
-            }
+            if (mounted) setState(() => _progress = progress / 100.0);
           },
           onPageStarted: (String url) {
             if (mounted) setState(() => _isLoading = true);
@@ -131,7 +193,7 @@ class _DashboardWebViewScreenState extends State<DashboardWebViewScreen> {
           onNavigationRequest: (NavigationRequest request) async {
             final url = request.url;
 
-            // Handle WhatsApp links directly in official WhatsApp app
+            // WhatsApp routing
             if (url.startsWith('https://wa.me') ||
                 url.startsWith('whatsapp:') ||
                 url.startsWith('https://api.whatsapp.com')) {
@@ -142,7 +204,7 @@ class _DashboardWebViewScreenState extends State<DashboardWebViewScreen> {
               } catch (_) {}
             }
 
-            // Handle phone dialer links
+            // Phone dialer
             if (url.startsWith('tel:')) {
               try {
                 final uri = Uri.parse(url);
@@ -151,7 +213,7 @@ class _DashboardWebViewScreenState extends State<DashboardWebViewScreen> {
               } catch (_) {}
             }
 
-            // Handle external links (ImgBB, GitHub, etc.)
+            // External links (ImgBB, etc.)
             if (url.startsWith('http://') || url.startsWith('https://')) {
               if (url.contains('imgbb.com') || url.contains('github.io')) {
                 try {
@@ -192,33 +254,12 @@ class _DashboardWebViewScreenState extends State<DashboardWebViewScreen> {
   Future<void> _handleJavaScriptNotification(String rawJson) async {
     try {
       final data = jsonDecode(rawJson);
-      final String title = data['title'] ?? 'إشعار جديد';
+      final String title = data['title'] ?? 'إشعار جديد - Abo Zahra';
       final String message = data['message'] ?? '';
-
-      const AndroidNotificationDetails androidDetails =
-          AndroidNotificationDetails(
-        'abozahra_reservations_v2',
-        'حجوزات وإشعارات أبو زهرة',
-        channelDescription: 'تنبيهات فورية عند وصول حجز جديد أو رفع إسكرين دفع',
-        importance: Importance.max,
-        priority: Priority.high,
-        showWhen: true,
-        enableVibration: true,
-        playSound: true,
-        icon: '@mipmap/ic_launcher',
-      );
-
-      const NotificationDetails platformDetails =
-          NotificationDetails(android: androidDetails);
-
-      await flutterLocalNotificationsPlugin.show(
-        DateTime.now().millisecondsSinceEpoch % 100000,
-        title,
-        message,
-        platformDetails,
-      );
+      await _triggerHeadsUpNotification(title, message);
     } catch (e) {
-      debugPrint('Error triggering local notification: $e');
+      // If rawJson was plain text
+      await _triggerHeadsUpNotification('إشعار Abo Zahra', rawJson);
     }
   }
 
