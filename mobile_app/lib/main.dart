@@ -62,7 +62,6 @@ class DashboardWebViewScreen extends StatefulWidget {
 class _DashboardWebViewScreenState extends State<DashboardWebViewScreen> {
   late final WebViewController _controller;
   bool _isLoading = true;
-  double _progress = 0;
 
   @override
   void initState() {
@@ -71,10 +70,8 @@ class _DashboardWebViewScreenState extends State<DashboardWebViewScreen> {
     _initRealNotificationSystem();
   }
 
-  /// Sets up Android High Importance Notification Channel & requests Android 13+ permission dialog
   Future<void> _initRealNotificationSystem() async {
     try {
-      // 1. Initialize local notifications with default icon
       const AndroidInitializationSettings initializationSettingsAndroid =
           AndroidInitializationSettings('ic_launcher');
       const InitializationSettings initializationSettings =
@@ -82,16 +79,12 @@ class _DashboardWebViewScreenState extends State<DashboardWebViewScreen> {
 
       await flutterLocalNotificationsPlugin.initialize(
         initializationSettings,
-        onDidReceiveNotificationResponse: (NotificationResponse response) {
-          debugPrint('Notification tapped: ${response.payload}');
-        },
       );
 
       final AndroidFlutterLocalNotificationsPlugin? androidPlugin =
           flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
               AndroidFlutterLocalNotificationsPlugin>();
 
-      // 2. Create Heads-Up High Importance Channel
       if (androidPlugin != null) {
         final AndroidNotificationChannel channel = AndroidNotificationChannel(
           kNotificationChannelId,
@@ -105,36 +98,24 @@ class _DashboardWebViewScreenState extends State<DashboardWebViewScreen> {
         );
         await androidPlugin.createNotificationChannel(channel);
 
-        // Request official Android 13+ Notification Permission via plugin
         try {
           await androidPlugin.requestNotificationsPermission();
         } catch (_) {}
       }
 
-      // 3. Request official System Permission dialog via permission_handler (just like WhatsApp)
       try {
         final status = await Permission.notification.status;
         if (!status.isGranted) {
-          final result = await Permission.notification.request();
-          debugPrint('Notification permission status: $result');
+          await Permission.notification.request();
         }
       } catch (e) {
-        debugPrint('Permission handler check (handled safely): $e');
+        debugPrint('Permission request error: $e');
       }
-
-      // 4. Send an instant welcome notification after 1.5 seconds so user sees it in action
-      Future.delayed(const Duration(milliseconds: 1500), () {
-        _triggerHeadsUpNotification(
-          '👑 مرحباً بك في Abo Zahra',
-          'تم تفعيل نظام الإشعارات الفورية بنجاح! ستصلك تنبيهات الحجوزات والدفع فوراً.',
-        );
-      });
     } catch (e) {
-      debugPrint('Notification setup error (handled safely): $e');
+      debugPrint('Notification setup error: $e');
     }
   }
 
-  /// Triggers a real heads-up native Android notification with vibration & sound
   Future<void> _triggerHeadsUpNotification(String title, String message) async {
     try {
       final AndroidNotificationDetails androidDetails =
@@ -166,9 +147,8 @@ class _DashboardWebViewScreenState extends State<DashboardWebViewScreen> {
         message,
         platformDetails,
       );
-      debugPrint('Native notification dispatched successfully [ID: $notifId]');
     } catch (e) {
-      debugPrint('Error triggering local notification: $e');
+      debugPrint('Error triggering notification: $e');
     }
   }
 
@@ -178,9 +158,6 @@ class _DashboardWebViewScreenState extends State<DashboardWebViewScreen> {
       ..setBackgroundColor(const Color(0xFF0F0A1A))
       ..setNavigationDelegate(
         NavigationDelegate(
-          onProgress: (int progress) {
-            if (mounted) setState(() => _progress = progress / 100.0);
-          },
           onPageStarted: (String url) {
             if (mounted) setState(() => _isLoading = true);
           },
@@ -188,39 +165,29 @@ class _DashboardWebViewScreenState extends State<DashboardWebViewScreen> {
             if (mounted) setState(() => _isLoading = false);
           },
           onWebResourceError: (WebResourceError error) {
-            debugPrint('Web resource error (handled): ${error.description}');
+            debugPrint('Web resource error: ${error.description}');
           },
           onNavigationRequest: (NavigationRequest request) async {
             final url = request.url;
 
-            // WhatsApp routing
             if (url.startsWith('https://wa.me') ||
                 url.startsWith('whatsapp:') ||
-                url.startsWith('https://api.whatsapp.com')) {
+                url.startsWith('https://api.whatsapp.com') ||
+                url.startsWith('tel:')) {
               try {
                 final uri = Uri.parse(url);
                 await launchUrl(uri, mode: LaunchMode.externalApplication);
-                return NavigationDecision.prevent;
               } catch (_) {}
+              return NavigationDecision.prevent;
             }
 
-            // Phone dialer
-            if (url.startsWith('tel:')) {
-              try {
-                final uri = Uri.parse(url);
-                await launchUrl(uri, mode: LaunchMode.externalApplication);
-                return NavigationDecision.prevent;
-              } catch (_) {}
-            }
-
-            // External links (ImgBB, etc.)
             if (url.startsWith('http://') || url.startsWith('https://')) {
               if (url.contains('imgbb.com') || url.contains('github.io')) {
                 try {
                   final uri = Uri.parse(url);
                   await launchUrl(uri, mode: LaunchMode.externalApplication);
-                  return NavigationDecision.prevent;
                 } catch (_) {}
+                return NavigationDecision.prevent;
               }
             }
 
@@ -233,22 +200,8 @@ class _DashboardWebViewScreenState extends State<DashboardWebViewScreen> {
         onMessageReceived: (JavaScriptMessage message) {
           _handleJavaScriptNotification(message.message);
         },
-      );
-
-    _loadContent();
-  }
-
-  Future<void> _loadContent() async {
-    try {
-      final htmlContent = await rootBundle.loadString('assets/www/index.html');
-      await _controller.loadHtmlString(
-        htmlContent,
-        baseUrl: 'https://reservations-e411a.firebaseapp.com',
-      );
-    } catch (e) {
-      debugPrint('Fallback loading asset: $e');
-      _controller.loadFlutterAsset('assets/www/index.html');
-    }
+      )
+      ..loadFlutterAsset('assets/www/index.html');
   }
 
   Future<void> _handleJavaScriptNotification(String rawJson) async {
@@ -258,7 +211,6 @@ class _DashboardWebViewScreenState extends State<DashboardWebViewScreen> {
       final String message = data['message'] ?? '';
       await _triggerHeadsUpNotification(title, message);
     } catch (e) {
-      // If rawJson was plain text
       await _triggerHeadsUpNotification('إشعار Abo Zahra', rawJson);
     }
   }
@@ -288,11 +240,10 @@ class _DashboardWebViewScreenState extends State<DashboardWebViewScreen> {
             children: [
               WebViewWidget(controller: _controller),
               if (_isLoading)
-                LinearProgressIndicator(
-                  value: _progress > 0 && _progress < 1 ? _progress : null,
-                  backgroundColor: const Color(0xFF1A1225),
-                  color: const Color(0xFFF59E0B),
-                  minHeight: 3,
+                const LinearProgressIndicator(
+                  backgroundColor: Color(0xFF1A1225),
+                  color: Color(0xFFF59E0B),
+                  minHeight: 2.5,
                 ),
             ],
           ),
