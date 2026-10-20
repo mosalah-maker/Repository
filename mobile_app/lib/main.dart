@@ -205,6 +205,13 @@ void onBackgroundServiceStart(ServiceInstance service) async {
   });
 }
 
+@pragma('vm:entry-point')
+Future<bool> onIosBackground(ServiceInstance service) async {
+  WidgetsFlutterBinding.ensureInitialized();
+  DartPluginRegistrant.ensureInitialized();
+  return true;
+}
+
 // Initialize Background Service
 Future<void> initializeBackgroundService() async {
   try {
@@ -234,9 +241,10 @@ Future<void> initializeBackgroundService() async {
         initialNotificationContent: 'خدمة مراقبة الحجوزات تعمل بالخلفية 24/7',
         foregroundServiceNotificationId: 9999,
       ),
-      iosConfiguration: IOSConfiguration(
+      iosConfiguration: IosConfiguration(
         autoStart: false,
         onForeground: onBackgroundServiceStart,
+        onBackground: onIosBackground,
       ),
     );
 
