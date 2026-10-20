@@ -1,0 +1,2651 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Abo Zahra | لوحة التحكم المتكاملة</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90' fill='%23F59E0B'>👑</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent;
+        }
+        :root {
+            --primary-gold: #F59E0B;
+            --primary-light: #FCD34D;
+            --primary-dark: #D97706;
+            --bg-dark: #0F0A1A;
+            --card-bg: rgba(26, 18, 37, 0.85);
+            --border-gold: rgba(245, 158, 11, 0.15);
+        }
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: var(--bg-dark);
+            color: #F3E8FF;
+            min-height: 100vh;
+            direction: rtl;
+            overflow-x: hidden;
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #1A1225; }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #F59E0B, #D97706); border-radius: 10px; }
+
+        .admin-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background: radial-gradient(circle at 70% 20%, rgba(245, 158, 11, 0.08) 0%, #0F0A1A 90%);
+            pointer-events: none;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            position: fixed;
+            right: 0; top: 0;
+            width: 280px;
+            height: 100vh;
+            background: rgba(26, 18, 37, 0.98);
+            backdrop-filter: blur(25px);
+            border-left: 1px solid var(--border-gold);
+            z-index: 100;
+            padding: 25px 0;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+            box-shadow: -10px 0 40px rgba(0,0,0,0.6);
+        }
+        .sidebar-header {
+            padding: 10px 25px 25px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-gold);
+            margin-bottom: 15px;
+        }
+        .sidebar-header .logo { 
+            font-size: 50px; 
+            margin-bottom: 6px; 
+            animation: pulseGold 2s infinite;
+        }
+        @keyframes pulseGold {
+            0%, 100% { filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.3)); transform: scale(1); }
+            50% { filter: drop-shadow(0 0 25px rgba(245, 158, 11, 0.8)); transform: scale(1.03); }
+        }
+        .sidebar-header h2 { 
+            font-size: 20px; 
+            background: linear-gradient(135deg, #F59E0B, #FCD34D, #D97706);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 900;
+        }
+        .sidebar-header p { font-size: 12px; color: rgba(243, 232, 255, 0.4); }
+        .sidebar-nav { list-style: none; padding: 0 15px; }
+        .sidebar-nav li { margin-bottom: 5px; }
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 18px;
+            color: rgba(243, 232, 255, 0.6);
+            text-decoration: none;
+            border-radius: 14px;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .sidebar-nav a::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.05));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .sidebar-nav a:hover::before,
+        .sidebar-nav a.active::before {
+            opacity: 1;
+        }
+        .sidebar-nav a:hover, .sidebar-nav a.active {
+            color: #FCD34D;
+            transform: translateX(-5px);
+        }
+        .sidebar-nav a .icon { 
+            position: relative;
+            z-index: 1;
+            font-size: 18px;
+            color: #F59E0B;
+            width: 24px;
+            text-align: center;
+        }
+        .sidebar-nav a span:not(.icon):not(.tab-badge) {
+            position: relative;
+            z-index: 1;
+        }
+        .sidebar-nav a .tab-badge {
+            background: linear-gradient(135deg, #F59E0B, #D97706);
+            color: #0F0A1A;
+            font-size: 10px;
+            padding: 2px 10px;
+            border-radius: 30px;
+            margin-right: auto;
+            font-weight: 800;
+            position: relative;
+            z-index: 1;
+        }
+        .sidebar-nav a.active {
+            border-right: 3px solid #F59E0B;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            margin-right: 280px;
+            padding: 25px;
+            min-height: 100vh;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* ===== TOP BAR ===== */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 12px;
+            background: rgba(26, 18, 37, 0.7);
+            backdrop-filter: blur(20px);
+            padding: 14px 22px;
+            border-radius: 18px;
+            border: 1px solid var(--border-gold);
+        }
+        .top-bar-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .top-bar h1 {
+            font-size: 20px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #F59E0B, #FCD34D, #D97706, #F59E0B);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            background-size: 300% 300%;
+            animation: gradientGold 4s ease infinite;
+        }
+        @keyframes gradientGold {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Notifications Bell in Top Bar */
+        .top-bar-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .notif-bell-btn {
+            position: relative;
+            background: rgba(245, 158, 11, 0.12);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            color: #FCD34D;
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+        .notif-bell-btn:hover {
+            transform: scale(1.05);
+            background: rgba(245, 158, 11, 0.25);
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+        }
+        .notif-badge-count {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #EF4444;
+            color: white;
+            font-size: 11px;
+            font-weight: 800;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 10px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+            border: 2px solid #0F0A1A;
+            animation: bounceIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes bounceIn {
+            0% { transform: scale(0); }
+            80% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        /* ===== SETTINGS SECTION ===== */
+        .settings-section {
+            background: rgba(26, 18, 37, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-gold);
+            border-radius: 20px;
+            padding: 22px;
+            margin-bottom: 25px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-end;
+        }
+        .settings-section .setting-group {
+            flex: 1;
+            min-width: 220px;
+        }
+        .settings-section .setting-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            color: #F59E0B;
+            margin-bottom: 8px;
+        }
+        .settings-section .setting-group input {
+            width: 100%;
+            padding: 13px 16px;
+            background: rgba(15, 10, 26, 0.85);
+            border: 1px solid rgba(245, 158, 11, 0.15);
+            border-radius: 14px;
+            color: #F3E8FF;
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        .settings-section .setting-group input:focus {
+            border-color: #F59E0B;
+            box-shadow: 0 0 25px rgba(245, 158, 11, 0.15);
+            outline: none;
+        }
+        .settings-section .setting-group .current-value {
+            font-size: 12px;
+            color: rgba(243, 232, 255, 0.45);
+            margin-top: 6px;
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 11px 22px;
+            border: none;
+            border-radius: 50px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.25);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #F59E0B, #D97706);
+            color: #0F0A1A;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: #FCD34D;
+        }
+        .btn-outline:hover {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: #F59E0B;
+        }
+        .btn-success { 
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: #fff;
+        }
+        .btn-danger { 
+            background: linear-gradient(135deg, #EF4444, #DC2626);
+            color: #fff;
+        }
+        .btn-sm { padding: 7px 16px; font-size: 12px; }
+        .btn-gold { 
+            background: linear-gradient(135deg, #F59E0B, #D97706);
+            color: #0F0A1A;
+        }
+        .btn-copy {
+            background: rgba(245, 158, 11, 0.12);
+            color: #F59E0B;
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            padding: 5px 14px;
+            font-size: 11px;
+            border-radius: 30px;
+        }
+
+        /* ===== STATS CARDS ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 25px;
+        }
+        .stat-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-gold);
+            border-radius: 20px;
+            padding: 20px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #F59E0B, #FCD34D, #D97706);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .stat-card:hover::before { opacity: 1; }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(245, 158, 11, 0.3);
+            box-shadow: 0 12px 30px rgba(245, 158, 11, 0.1);
+        }
+        .stat-icon { 
+            font-size: 28px; 
+            margin-bottom: 8px;
+            color: #F59E0B;
+            display: inline-block;
+        }
+        .stat-number { 
+            font-size: 32px; 
+            font-weight: 900; 
+            background: linear-gradient(135deg, #F59E0B, #FCD34D);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .stat-label { 
+            font-size: 13px; 
+            color: rgba(243, 232, 255, 0.5);
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        /* ===== FILTER BAR ===== */
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 22px;
+            flex-wrap: wrap;
+        }
+        .search-box {
+            flex: 1;
+            min-width: 240px;
+            position: relative;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 13px 44px 13px 18px;
+            background: rgba(26, 18, 37, 0.85);
+            border: 1px solid var(--border-gold);
+            border-radius: 50px;
+            color: #F3E8FF;
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        .search-box input:focus { 
+            border-color: #F59E0B;
+            box-shadow: 0 0 25px rgba(245, 158, 11, 0.1);
+        }
+        .search-box .search-icon {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #F59E0B;
+        }
+        .filter-select {
+            padding: 12px 18px;
+            background: rgba(26, 18, 37, 0.85);
+            border: 1px solid var(--border-gold);
+            border-radius: 50px;
+            color: #F3E8FF;
+            font-family: 'Cairo', sans-serif;
+            font-size: 13px;
+            cursor: pointer;
+            min-width: 170px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+        .filter-select:focus {
+            border-color: #F59E0B;
+        }
+        .filter-select option {
+            background: #1A1225;
+            color: #F3E8FF;
+        }
+
+        /* ===== TABLES ===== */
+        .table-container {
+            background: rgba(26, 18, 37, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-gold);
+            border-radius: 24px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .table-scroll { overflow-x: auto; }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            min-width: 800px;
+        }
+        thead { 
+            background: rgba(245, 158, 11, 0.06);
+            border-bottom: 1px solid var(--border-gold);
+        }
+        th { 
+            padding: 15px 18px; 
+            font-size: 13px; 
+            font-weight: 700; 
+            color: #F59E0B;
+            text-align: right;
+            text-transform: uppercase;
+        }
+        td { 
+            padding: 13px 18px; 
+            font-size: 13px; 
+            border-bottom: 1px solid rgba(245, 158, 11, 0.05);
+            vertical-align: middle;
+            color: #D4C4E6;
+        }
+        tbody tr:hover { 
+            background: rgba(245, 158, 11, 0.04);
+        }
+        .product-image-thumb {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 1px solid var(--border-gold);
+        }
+
+        /* ===== STATUS BADGES ===== */
+        .status-badge {
+            display: inline-block;
+            padding: 5px 14px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .status-badge.confirmed { 
+            background: rgba(16, 185, 129, 0.15); 
+            color: #34D399;
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+        .status-badge.pending { 
+            background: rgba(245, 158, 11, 0.15); 
+            color: #FBBF24;
+            border: 1px solid rgba(245, 158, 11, 0.25);
+        }
+        .status-badge.cancelled { 
+            background: rgba(239, 68, 68, 0.15); 
+            color: #F87171;
+            border: 1px solid rgba(239, 68, 68, 0.25);
+        }
+        .status-badge.status-review { 
+            background: rgba(245, 158, 11, 0.15); 
+            color: #FBBF24;
+            border: 1px solid rgba(245, 158, 11, 0.25);
+        }
+        .status-badge.status-contacted { 
+            background: rgba(245, 158, 11, 0.12); 
+            color: #FCD34D;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+        .status-badge.status-preparing { 
+            background: rgba(139, 92, 246, 0.15); 
+            color: #A78BFA;
+            border: 1px solid rgba(139, 92, 246, 0.25);
+        }
+        .status-badge.status-ready { 
+            background: rgba(16, 185, 129, 0.15); 
+            color: #34D399;
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+        .status-badge.status-shipped { 
+            background: rgba(59, 130, 246, 0.15); 
+            color: #60A5FA;
+            border: 1px solid rgba(59, 130, 246, 0.25);
+        }
+        .status-badge.status-delivered { 
+            background: rgba(16, 185, 129, 0.15); 
+            color: #34D399;
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+        .status-badge.status-cancelled { 
+            background: rgba(239, 68, 68, 0.15); 
+            color: #F87171;
+            border: 1px solid rgba(239, 68, 68, 0.25);
+        }
+
+        .payment-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(16, 185, 129, 0.12);
+            color: #34D399;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        .payment-badge.not-paid {
+            background: rgba(239, 68, 68, 0.12);
+            color: #F87171;
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        /* ===== STATUS SELECT ===== */
+        .status-select {
+            padding: 8px 12px;
+            border-radius: 30px;
+            border: 1px solid var(--border-gold);
+            font-family: 'Cairo', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            outline: none;
+            min-width: 170px;
+            background: rgba(26, 18, 37, 0.9);
+            color: #D4C4E6;
+            transition: all 0.3s ease;
+        }
+        .status-select:focus {
+            border-color: #F59E0B;
+        }
+
+        /* ===== ACTION BUTTONS ===== */
+        .proof-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+        .proof-btn.red { 
+            background: rgba(239, 68, 68, 0.12); 
+            color: #F87171;
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+        .proof-btn.green { 
+            background: rgba(16, 185, 129, 0.12); 
+            color: #34D399;
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+        .proof-btn:hover { 
+            transform: scale(1.1);
+        }
+
+        .actions-cell { display: flex; gap: 6px; flex-wrap: wrap; }
+        .action-btn {
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--border-gold);
+            border-radius: 12px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: rgba(26, 18, 37, 0.7);
+            color: #D4C4E6;
+        }
+        .action-btn:hover { 
+            transform: translateY(-2px) scale(1.05);
+            border-color: #F59E0B;
+            color: #F59E0B;
+        }
+        .action-btn.whatsapp:hover { color: #34D399; border-color: #34D399; }
+        .action-btn.delete:hover { color: #F87171; border-color: #F87171; }
+
+        /* ===== MOBILE CARDS ===== */
+        .mobile-cards { display: none; }
+        .mobile-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-gold);
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 14px;
+            transition: all 0.3s ease;
+        }
+        .mobile-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(245, 158, 11, 0.08);
+        }
+        .mobile-card-name { 
+            font-size: 16px; 
+            font-weight: 800; 
+            background: linear-gradient(135deg, #F59E0B, #FCD34D);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .mobile-card-body { display: grid; gap: 8px; margin-bottom: 12px; }
+        .mobile-card-row { display: flex; justify-content: space-between; font-size: 13px; }
+        .mobile-card-label { color: rgba(243, 232, 255, 0.45); }
+        .mobile-card-value { color: #D4C4E6; font-weight: 600; text-align: left; }
+        .mobile-card-status { margin: 10px 0; }
+        .mobile-card-status select { width: 100%; }
+        .mobile-card-actions {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .mobile-card-actions .action-btn {
+            width: 100%;
+            height: 38px;
+        }
+
+        /* ===== MODALS ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 10, 26, 0.92);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: rgba(26, 18, 37, 0.98);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 28px;
+            width: 100%;
+            max-width: 550px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.8);
+            animation: modalFadeIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.92) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-gold);
+        }
+        .modal-header h3 { 
+            font-size: 18px; 
+            font-weight: 800; 
+            color: #FCD34D;
+        }
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--border-gold);
+            border-radius: 12px;
+            background: rgba(26, 18, 37, 0.7);
+            color: #D4C4E6;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .modal-body { padding: 22px; }
+        .modal-footer {
+            padding: 16px 22px;
+            border-top: 1px solid var(--border-gold);
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* ===== FORMS ===== */
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            color: #F59E0B;
+            margin-bottom: 6px;
+        }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(15, 10, 26, 0.85);
+            border: 1px solid var(--border-gold);
+            border-radius: 14px;
+            color: #F3E8FF;
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        .form-group input:focus, .form-group textarea:focus { 
+            border-color: #F59E0B;
+            outline: none;
+        }
+        .form-group input[type="file"] {
+            padding: 10px;
+            background: rgba(15, 10, 26, 0.85);
+            border: 1px dashed rgba(245, 158, 11, 0.3);
+            cursor: pointer;
+        }
+
+        /* ===== DETAIL ITEMS ===== */
+        .detail-grid { display: grid; gap: 12px; }
+        .detail-item {
+            background: rgba(15, 10, 26, 0.65);
+            border-radius: 16px;
+            padding: 14px;
+            border: 1px solid var(--border-gold);
+        }
+        .detail-label { 
+            font-size: 12px; 
+            color: rgba(243, 232, 255, 0.45);
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+        .detail-value { 
+            font-size: 14px; 
+            font-weight: 700; 
+            color: #F3E8FF;
+        }
+        .proof-image { 
+            max-width: 100%; 
+            border-radius: 14px; 
+            margin-top: 8px; 
+            cursor: pointer;
+            border: 1px solid var(--border-gold);
+        }
+
+        /* ===== TOAST ===== */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 2100;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 360px;
+        }
+        .toast {
+            padding: 14px 20px;
+            border-radius: 16px;
+            font-size: 13px;
+            font-weight: 700;
+            animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(26, 18, 37, 0.95);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: #F3E8FF;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* ===== NOTIFICATION LIST IN MODAL ===== */
+        .notif-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px;
+            background: rgba(15, 10, 26, 0.65);
+            border-radius: 16px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border-gold);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .notif-item:hover {
+            background: rgba(245, 158, 11, 0.08);
+            border-color: #F59E0B;
+        }
+        .notif-item-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: rgba(245, 158, 11, 0.15);
+            color: #F59E0B;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        .notif-item-content { flex: 1; }
+        .notif-item-title { font-weight: 800; color: #FCD34D; font-size: 13px; margin-bottom: 2px; }
+        .notif-item-body { font-size: 12px; color: #D4C4E6; line-height: 1.4; }
+        .notif-item-time { font-size: 10px; color: rgba(243, 232, 255, 0.4); margin-top: 4px; }
+
+        /* ===== DISCOUNT SECTION ===== */
+        .discount-section {
+            background: rgba(26, 18, 37, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-gold);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 25px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .discount-section label {
+            color: #F59E0B;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .discount-section input {
+            flex: 1;
+            min-width: 140px;
+            padding: 12px 18px;
+            background: rgba(15, 10, 26, 0.85);
+            border: 1px solid var(--border-gold);
+            border-radius: 16px;
+            color: #F3E8FF;
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+            max-width: 180px;
+        }
+        .discount-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 13px;
+        }
+        .discount-status.active {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34D399;
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+        .discount-status.inactive {
+            background: rgba(239, 68, 68, 0.15);
+            color: #F87171;
+            border: 1px solid rgba(239, 68, 68, 0.25);
+        }
+
+        /* ===== SECTION MANAGEMENT ===== */
+        .sections-management {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-gold);
+        }
+        .section-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(15, 10, 26, 0.5);
+            padding: 12px 16px;
+            border-radius: 14px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+            gap: 8px;
+            border: 1px solid var(--border-gold);
+        }
+        .exam-link-input {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+        .exam-link-input input {
+            flex: 1;
+            min-width: 180px;
+            padding: 8px 12px;
+            background: rgba(15, 10, 26, 0.85);
+            border: 1px solid var(--border-gold);
+            border-radius: 12px;
+            color: #F3E8FF;
+            font-family: 'Cairo', sans-serif;
+            font-size: 13px;
+        }
+        .section-exam-link {
+            font-size: 12px;
+            color: rgba(243, 232, 255, 0.4);
+            margin-top: 4px;
+        }
+        .section-exam-link a { color: #FCD34D; text-decoration: none; }
+        .add-section-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .add-section-row input {
+            flex: 1;
+            padding: 10px 16px;
+            background: rgba(15, 10, 26, 0.85);
+            border: 1px solid var(--border-gold);
+            border-radius: 14px;
+            color: #F3E8FF;
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+        }
+
+        /* ===== TAB CONTENT ===== */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .new-badge {
+            background: linear-gradient(135deg, #F59E0B, #D97706);
+            color: #0F0A1A;
+            font-size: 9px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            margin-left: 8px;
+            font-weight: 800;
+        }
+
+        /* ===== MENU TOGGLE ===== */
+        .menu-toggle {
+            display: none;
+            width: 44px;
+            height: 44px;
+            background: rgba(26, 18, 37, 0.85);
+            border: 1px solid var(--border-gold);
+            border-radius: 14px;
+            color: #F59E0B;
+            font-size: 20px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 10, 26, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 95;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1000px) {
+            .sidebar { transform: translateX(100%); width: 280px; }
+            .sidebar.open { transform: translateX(0); }
+            .sidebar-overlay.open { display: block; }
+            .main-content { margin-right: 0; padding: 15px; }
+            .menu-toggle { display: inline-flex; }
+            .table-scroll { display: none; }
+            .mobile-cards { display: block; }
+            .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        }
+        @media (max-width: 600px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .filter-bar { flex-direction: column; }
+            .search-box, .filter-select { width: 100%; }
+            .mobile-card-actions { grid-template-columns: repeat(2, 1fr); }
+            .discount-section { flex-direction: column; }
+            .discount-section input { max-width: 100%; width: 100%; }
+            .settings-section { flex-direction: column; }
+            .settings-section .setting-group { width: 100%; }
+            .section-item { flex-direction: column; align-items: stretch; }
+            .exam-link-input { flex-direction: column; align-items: stretch; }
+            .add-section-row { flex-direction: column; }
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: 50px 20px;
+        }
+        .loading-state .spinner {
+            width: 38px;
+            height: 38px;
+            border: 3px solid rgba(245, 158, 11, 0.1);
+            border-top-color: #F59E0B;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .upload-progress {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(245, 158, 11, 0.1);
+            border-radius: 12px;
+            margin-top: 8px;
+        }
+        .upload-progress.active { display: flex; }
+        .upload-progress .spinner-small {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(245, 158, 11, 0.2);
+            border-top-color: #F59E0B;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+    </style>
+</head>
+<body>
+<div class="admin-bg"></div>
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <div class="logo">👑</div>
+        <h2>Abo Zahra</h2>
+        <p>لوحة التحكم المتكاملة (Android App)</p>
+    </div>
+    <ul class="sidebar-nav">
+        <li><a href="#" class="active" onclick="switchTab('headphones', this); return false"><span class="icon"><i class="fas fa-headphones"></i></span> <span>حجوزات السماعات</span></a></li>
+        <li><a href="#" onclick="switchTab('exams', this); return false"><span class="icon"><i class="fas fa-graduation-cap"></i></span> <span>حجوزات الامتحانات</span> <span class="tab-badge">جديد</span></a></li>
+        <li><a href="#" onclick="switchTab('products', this); return false"><span class="icon"><i class="fas fa-box"></i></span> <span>المنتجات</span> <span class="tab-badge">جديد</span></a></li>
+        <li><a href="#" onclick="switchTab('sections', this); return false"><span class="icon"><i class="fas fa-layer-group"></i></span> <span>إدارة الشعب</span> <span class="tab-badge">جديد</span></a></li>
+        <li><a href="#" onclick="switchTab('settings', this); return false"><span class="icon"><i class="fas fa-cog"></i></span> <span>الإعدادات</span> <span class="tab-badge">جديد</span></a></li>
+        <li><a href="#" onclick="openModal('notificationsModal'); return false"><span class="icon"><i class="fas fa-bell"></i></span> <span>مركز الإشعارات</span></a></li>
+        <li><a href="#" onclick="exportCSV(); return false"><span class="icon"><i class="fas fa-file-export"></i></span> <span>تصدير البيانات</span></a></li>
+        <li><a href="#" onclick="window.print(); return false"><span class="icon"><i class="fas fa-print"></i></span> <span>طباعة</span></a></li>
+    </ul>
+</aside>
+
+<div class="main-content" id="mainContent">
+    <!-- Top Bar with Menu & Notification Bell -->
+    <div class="top-bar">
+        <div class="top-bar-title-wrap">
+            <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+            <h1 id="pageTitle"><i class="fas fa-crown" style="color:#F59E0B;"></i> لوحة تحكم Abo Zahra</h1>
+        </div>
+        <div class="top-bar-actions">
+            <button class="notif-bell-btn" onclick="openNotificationsModal()" title="الإشعارات">
+                <i class="fas fa-bell"></i>
+                <span class="notif-badge-count" id="notifBadge">0</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ========== TAB 1: HEADPHONES ========== -->
+    <div class="tab-content active" id="tab-headphones">
+        <div class="stats-grid" id="headphoneStats">
+            <div class="stat-card"><div class="stat-icon"><i class="fas fa-headphones"></i></div><div class="stat-number" id="hStatTotal">0</div><div class="stat-label">إجمالي الحجوزات</div></div>
+            <div class="stat-card"><div class="stat-icon"><i class="fas fa-star"></i></div><div class="stat-number" id="hStatNew">0</div><div class="stat-label">جديدة (متاحة)</div></div>
+            <div class="stat-card"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><div class="stat-number" id="hStatPaid">0</div><div class="stat-label">تم الدفع</div></div>
+            <div class="stat-card"><div class="stat-icon"><i class="fas fa-image"></i></div><div class="stat-number" id="hStatProof">0</div><div class="stat-label">تم رفع إسكرين</div></div>
+            <div class="stat-card"><div class="stat-icon"><i class="fas fa-cog"></i></div><div class="stat-number" id="hStatPreparing">0</div><div class="stat-label">تحت التجهيز</div></div>
+            <div class="stat-card"><div class="stat-icon"><i class="fas fa-check-double"></i></div><div class="stat-number" id="hStatDelivered">0</div><div class="stat-label">تم الاستلام</div></div>
+        </div>
+
+        <div class="filter-bar">
+            <div class="search-box">
+                <span class="search-icon"><i class="fas fa-search"></i></span>
+                <input type="text" id="hSearchInput" placeholder="ابحث بالاسم، التليفون، نوع السماعة..." oninput="filterHeadphones()">
+            </div>
+            <select class="filter-select" id="hStatusFilter" onchange="filterHeadphones()">
+                <option value="all">📋 كل الحالات</option>
+                <option value="قيد المراجعة">⏳ قيد المراجعة</option>
+                <option value="تم التواصل">📞 تم التواصل</option>
+                <option value="تحت التجهيز">🔧 تحت التجهيز</option>
+                <option value="تم الانتهاء من التجهيز">✔️ تم الانتهاء من التجهيز</option>
+                <option value="تم تسليمه لمندوب الشحن">🚚 تم تسليمه للشحن</option>
+                <option value="تم الاستلام">✅ تم الاستلام</option>
+                <option value="ملغي">❌ ملغي</option>
+            </select>
+            <select class="filter-select" id="hProofFilter" onchange="filterHeadphones()">
+                <option value="all">📸 كل الحالات</option>
+                <option value="has_proof">✅ تم رفع إسكرين</option>
+                <option value="no_proof">❌ لم يرفع إسكرين</option>
+            </select>
+        </div>
+
+        <div class="table-container">
+            <div class="table-scroll">
+                <table>
+                    <thead><tr><th>#</th><th>الاسم</th><th>التليفون</th><th>العنوان</th><th>المنتج</th><th>التسليم</th><th>تاريخ الحجز</th><th>حالة الدفع</th><th>حالة الطلب</th><th>الإسكرين</th><th>العمليات</th></tr></thead>
+                    <tbody id="hTableBody"><tr><td colspan="11"><div class="loading-state"><div class="spinner"></div><p>جاري التحميل...</p></div></td></tr></tbody>
+                </table>
+            </div>
+            <div class="mobile-cards" id="hMobileCards"></div>
+            <div style="padding: 15px; border-top: 1px solid var(--border-gold); display: flex; justify-content: space-between; color: rgba(243,232,255,0.4); font-size: 13px;">
+                <span id="hShowingCount">عرض 0 حجز</span>
+                <span id="hTotalCount">الإجمالي: 0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== TAB 2: EXAMS ========== -->
+    <div class="tab-content" id="tab-exams">
+        <div class="stats-grid" id="examStats">
+            <div class="stat-card"><div class="stat-icon"><i class="fas fa-graduation-cap"></i></div><div class="stat-number" id="eStatTotal">0</div><div class="stat-label">إجمالي الحجوزات</div></div>
+            <div class="stat-card"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><div class="stat-number" id="eStatConfirmed">0</div><div class="stat-label">تم التأكيد</div></div>
+            <div class="stat-card"><div class="stat-icon"><i class="fas fa-clock"></i></div><div class="stat-number" id="eStatPending">0</div><div class="stat-label">في انتظار التأكيد</div></div>
+        </div>
+
+        <div class="filter-bar">
+            <div class="search-box">
+                <span class="search-icon"><i class="fas fa-search"></i></span>
+                <input type="text" id="eSearchInput" placeholder="ابحث بالاسم، رقم الواتس..." oninput="filterExams()">
+            </div>
+            <select class="filter-select" id="eStatusFilter" onchange="filterExams()">
+                <option value="all">📋 كل الحالات</option>
+                <option value="pending">⏳ في انتظار التأكيد</option>
+                <option value="confirmed">✅ تم التأكيد</option>
+                <option value="cancelled">❌ ملغي</option>
+            </select>
+            <select class="filter-select" id="eSectionFilter" onchange="filterExams()">
+                <option value="all">📚 كل الشعب</option>
+            </select>
+        </div>
+
+        <div class="table-container">
+            <div class="table-scroll">
+                <table>
+                    <thead><tr><th>#</th><th>الاسم</th><th>رقم الواتساب</th><th>الشعبة</th><th>تاريخ الحجز</th><th>الحالة</th><th>العمليات</th></tr></thead>
+                    <tbody id="eTableBody"><tr><td colspan="7"><div class="loading-state"><div class="spinner"></div><p>جاري التحميل...</p></div></td></tr></tbody>
+                </table>
+            </div>
+            <div class="mobile-cards" id="eMobileCards"></div>
+            <div style="padding: 15px; border-top: 1px solid var(--border-gold); display: flex; justify-content: space-between; color: rgba(243,232,255,0.4); font-size: 13px;">
+                <span id="eShowingCount">عرض 0 حجز</span>
+                <span id="eTotalCount">الإجمالي: 0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== TAB 3: PRODUCTS ========== -->
+    <div class="tab-content" id="tab-products">
+        <div class="discount-section">
+            <label><i class="fas fa-percent" style="color:#F59E0B;"></i> الخصم على جميع المنتجات:</label>
+            <input type="number" id="discountInput" placeholder="مثال: 20" min="0" max="100">
+            <button class="btn btn-gold btn-sm" onclick="applyDiscountToAll()"><i class="fas fa-bolt"></i> تفعيل الخصم</button>
+            <button class="btn btn-outline btn-sm" onclick="clearDiscount()"><i class="fas fa-times"></i> إلغاء الخصم</button>
+            <span id="discountStatus" class="discount-status inactive">⛔ الخصم غير مفعل</span>
+        </div>
+
+        <div style="margin-bottom: 22px;">
+            <button class="btn btn-primary" onclick="openProductModal()"><i class="fas fa-plus"></i> إضافة منتج جديد</button>
+        </div>
+
+        <div class="table-container">
+            <div class="table-scroll">
+                <table>
+                    <thead><tr><th>#</th><th>الصورة</th><th>اسم المنتج</th><th>الوصف</th><th>السعر</th><th>السعر بعد الخصم</th><th>العمليات</th></tr></thead>
+                    <tbody id="pTableBody"><tr><td colspan="7"><div class="loading-state"><div class="spinner"></div><p>جاري التحميل...</p></div></td></tr></tbody>
+                </table>
+            </div>
+            <div class="mobile-cards" id="pMobileCards"></div>
+            <div style="padding: 15px; border-top: 1px solid var(--border-gold); display: flex; justify-content: space-between; color: rgba(243,232,255,0.4); font-size: 13px;">
+                <span id="pShowingCount">عرض 0 منتج</span>
+                <span id="pTotalCount">الإجمالي: 0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== TAB 4: SECTIONS ========== -->
+    <div class="tab-content" id="tab-sections">
+        <div class="table-container">
+            <div style="padding: 20px;">
+                <h3 style="color: #F59E0B; margin-bottom: 15px;">📚 الشعب المتاحة</h3>
+                <div id="sectionsList">
+                    <div class="loading-state"><div class="spinner"></div><p>جاري التحميل...</p></div>
+                </div>
+
+                <div class="sections-management">
+                    <h4><i class="fas fa-plus-circle" style="color:#F59E0B;"></i> إضافة شعبة جديدة</h4>
+                    <div class="add-section-row">
+                        <input type="text" id="newSectionName" placeholder="اسم الشعبة (مثل: علمي علوم)">
+                        <button class="btn btn-primary btn-sm" onclick="addNewSection()"><i class="fas fa-plus"></i> إضافة</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== TAB 5: SETTINGS & NOTIFICATIONS ========== -->
+    <div class="tab-content" id="tab-settings">
+        <!-- Notification Settings -->
+        <div class="settings-section" style="border-color: rgba(245, 158, 11, 0.3);">
+            <div style="width: 100%; margin-bottom: 8px;">
+                <h3 style="color:#F59E0B; font-size: 16px;"><i class="fas fa-bell"></i> إعدادات الإشعارات والتنبيهات المباشرة</h3>
+                <p style="font-size: 13px; color: rgba(243,232,255,0.5); margin-top: 4px;">تفعيل الإشعارات الفورية على الهاتف عند وصول حجز جديد أو رفع إسكرين دفع.</p>
+            </div>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; width: 100%;">
+                <button class="btn btn-primary" onclick="testNotification()"><i class="fas fa-vial"></i> تجربة إشعار فوري الآن</button>
+                <button class="btn btn-outline" onclick="requestNotificationPermission()"><i class="fas fa-shield-alt"></i> منح إذن الإشعارات</button>
+                <button class="btn btn-outline" onclick="toggleSoundAlert()" id="soundToggleBtn"><i class="fas fa-volume-up"></i> صوت التنبيه: مفعل</button>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <div class="setting-group">
+                <label><i class="fab fa-whatsapp"></i> رقم واتساب الموقع</label>
+                <input type="text" id="siteWhatsApp" placeholder="أدخل رقم الواتساب">
+                <div class="current-value" id="currentWhatsApp">الحالي: جاري التحميل...</div>
+            </div>
+            <div class="setting-group">
+                <label><i class="fas fa-money-bill-transfer"></i> رقم تحويل فودافون كاش</label>
+                <input type="text" id="siteCashNumber" placeholder="أدخل رقم التحويل">
+                <div class="current-value" id="currentCashNumber">الحالي: جاري التحميل...</div>
+            </div>
+            <div class="setting-group">
+                <label><i class="fas fa-coins"></i> قيمة تأمين الشحن (جنيه)</label>
+                <input type="number" id="siteCashAmount" placeholder="أدخل المبلغ" min="0">
+                <div class="current-value" id="currentCashAmount">الحالي: جاري التحميل...</div>
+            </div>
+            <div class="setting-group">
+                <label><i class="fas fa-graduation-cap"></i> قيمة تأكيد الامتحان (جنيه)</label>
+                <input type="number" id="siteExamAmount" placeholder="أدخل المبلغ" min="0">
+                <div class="current-value" id="currentExamAmount">الحالي: جاري التحميل...</div>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; width: 100%;">
+                <button class="btn btn-primary" onclick="saveSettings()"><i class="fas fa-save"></i> حفظ الإعدادات</button>
+                <button class="btn btn-outline" onclick="loadSettings()"><i class="fas fa-undo"></i> استرجاع</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========== NOTIFICATIONS MODAL ========== -->
+<div class="modal-overlay" id="notificationsModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3><i class="fas fa-bell" style="color:#F59E0B;"></i> مركز الإشعارات الفورية</h3>
+            <button class="modal-close" onclick="closeModal('notificationsModal')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <span style="font-size: 13px; color: rgba(243,232,255,0.6);" id="notifListCount">0 إشعارات</span>
+                <button class="btn btn-outline btn-sm" onclick="clearAllNotifications()"><i class="fas fa-trash-alt"></i> مسح السجل</button>
+            </div>
+            <div id="notificationsList">
+                <div style="text-align: center; padding: 30px; color: rgba(243,232,255,0.4);">
+                    <i class="fas fa-bell-slash" style="font-size: 35px; color: #F59E0B; margin-bottom: 10px; display: block;"></i>
+                    لا توجد إشعارات جديدة حالياً
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('notificationsModal')">إغلاق</button>
+        </div>
+    </div>
+</div>
+
+<!-- ========== HEADPHONE MODALS ========== -->
+<div class="modal-overlay" id="editHeadphoneModal"><div class="modal"><div class="modal-header"><h3><i class="fas fa-edit" style="color:#F59E0B;"></i> تعديل حجز السماعة</h3><button class="modal-close" onclick="closeModal('editHeadphoneModal')"><i class="fas fa-times"></i></button></div><div class="modal-body"><input type="hidden" id="editHId"><div class="form-group"><label>الاسم</label><input type="text" id="editHName"></div><div class="form-group"><label>رقم التليفون</label><input type="text" id="editHPhone"></div><div class="form-group"><label>العنوان</label><input type="text" id="editHAddress"></div><div class="form-group"><label>المنتج</label><textarea id="editHDevice" rows="3"></textarea></div><div class="form-group"><label>ميعاد التسليم</label><input type="date" id="editHDeliveryDate"></div><div class="form-group"><label>الاستفسار</label><textarea id="editHQuestion" rows="3"></textarea></div></div><div class="modal-footer"><button class="btn btn-primary" onclick="saveHEdit()"><i class="fas fa-save"></i> حفظ</button><button class="btn btn-outline" onclick="closeModal('editHeadphoneModal')">إلغاء</button></div></div></div>
+
+<div class="modal-overlay" id="detailHeadphoneModal"><div class="modal"><div class="modal-header"><h3><i class="fas fa-info-circle" style="color:#F59E0B;"></i> تفاصيل حجز السماعة</h3><button class="modal-close" onclick="closeModal('detailHeadphoneModal')"><i class="fas fa-times"></i></button></div><div class="modal-body" id="detailHContent"></div><div class="modal-footer" id="detailHFooter"></div></div></div>
+
+<!-- ========== EXAM MODALS ========== -->
+<div class="modal-overlay" id="editExamModal"><div class="modal"><div class="modal-header"><h3><i class="fas fa-edit" style="color:#F59E0B;"></i> تعديل حجز الامتحان</h3><button class="modal-close" onclick="closeModal('editExamModal')"><i class="fas fa-times"></i></button></div><div class="modal-body"><input type="hidden" id="editExamId"><div class="form-group"><label>الاسم</label><input type="text" id="editExamName"></div><div class="form-group"><label>رقم الواتساب</label><input type="text" id="editExamPhone"></div><div class="form-group"><label>الشعبة</label><input type="text" id="editExamSection"></div></div><div class="modal-footer"><button class="btn btn-primary" onclick="saveExamEdit()"><i class="fas fa-save"></i> حفظ</button><button class="btn btn-outline" onclick="closeModal('editExamModal')">إلغاء</button></div></div></div>
+
+<div class="modal-overlay" id="detailExamModal"><div class="modal"><div class="modal-header"><h3><i class="fas fa-info-circle" style="color:#F59E0B;"></i> تفاصيل حجز الامتحان</h3><button class="modal-close" onclick="closeModal('detailExamModal')"><i class="fas fa-times"></i></button></div><div class="modal-body" id="detailExamContent"></div><div class="modal-footer" id="detailExamFooter"></div></div></div>
+
+<!-- ========== PRODUCT MODALS ========== -->
+<div class="modal-overlay" id="productModal"><div class="modal"><div class="modal-header"><h3><i class="fas fa-box" style="color:#F59E0B;"></i> <span id="productModalTitle">إضافة منتج جديد</span></h3><button class="modal-close" onclick="closeModal('productModal')"><i class="fas fa-times"></i></button></div><div class="modal-body"><input type="hidden" id="editPId"><div class="form-group"><label>صورة المنتج</label><input type="file" id="editPImage" accept="image/*" onchange="previewProductImage(this)"><div id="imagePreviewContainer" style="margin-top:10px;"></div><div class="upload-progress" id="uploadProgress"><div class="spinner-small"></div><span>جاري رفع الصورة إلى ImgBB...</span></div></div><div class="form-group"><label>اسم المنتج</label><input type="text" id="editPName" placeholder="اسم المنتج"></div><div class="form-group"><label>وصف المنتج</label><textarea id="editPDesc" rows="3" placeholder="وصف المنتج"></textarea></div><div class="form-group"><label>سعر المنتج (بالجنيه)</label><input type="number" id="editPPrice" placeholder="0"></div></div><div class="modal-footer"><button class="btn btn-primary" onclick="saveProduct()"><i class="fas fa-save"></i> حفظ</button><button class="btn btn-outline" onclick="closeModal('productModal')">إلغاء</button></div></div></div>
+
+<!-- ========== CONFIRM DELETE MODAL ========== -->
+<div class="modal-overlay" id="confirmModal"><div class="modal" style="max-width:400px;"><div class="modal-body"><div style="text-align:center;"><div style="font-size:45px;margin-bottom:12px;"><i class="fas fa-exclamation-triangle" style="color:#F59E0B;"></i></div><h3 style="color:#F59E0B;font-weight:800;">تأكيد الحذف</h3><p style="color:rgba(243,232,255,0.4);margin:12px 0;">هل أنت متأكد من حذف هذا العنصر؟</p><div style="display:flex;gap:10px;justify-content:center;"><button class="btn btn-danger" id="confirmYes">نعم، احذف</button><button class="btn btn-outline" onclick="closeModal('confirmModal')">إلغاء</button></div></div></div></div></div>
+
+<!-- ========== PROOF MODAL ========== -->
+<div class="modal-overlay" id="proofModal"><div class="modal" style="max-width:550px;"><div class="modal-header"><h3><i class="fas fa-image" style="color:#F59E0B;"></i> إسكرين التحويل</h3><button class="modal-close" onclick="closeModal('proofModal')"><i class="fas fa-times"></i></button></div><div class="modal-body" id="proofContent"></div><div class="modal-footer" id="proofFooter"></div></div></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+// ===== Firebase Initialization =====
+firebase.initializeApp({
+    apiKey: "AIzaSyDrhyNCKO5tzF-tiRQevk12kLM8hAkkr0w",
+    authDomain: "reservations-e411a.firebaseapp.com",
+    databaseURL: "https://reservations-e411a-default-rtdb.firebaseio.com",
+    projectId: "reservations-e411a",
+    storageBucket: "reservations-e411a.firebasestorage.app",
+    messagingSenderId: "197134642642",
+    appId: "1:197134642642:web:a112f2cbf9dc64d0096c0b",
+    measurementId: "G-R0MVFWBG53"
+});
+
+const db = firebase.firestore();
+let allHeadphones = [];
+let allExams = [];
+let allProducts = [];
+let allSections = [];
+let deleteId = null;
+let deleteType = null;
+
+// Notification Tracking
+let knownHeadphoneIds = new Set();
+let knownExamIds = new Set();
+let isInitialHeadphonesLoad = true;
+let isInitialExamsLoad = true;
+let soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
+let notificationsHistory = JSON.parse(localStorage.getItem('appNotifications') || '[]');
+
+const IMGBB_API_KEY = 'd96cbbe822e1ace2ef3247edf29d6de2';
+const CONFIRM_PAGE_URL = "https://mosalah-maker.github.io/Confirm-your-reservation/";
+const CONFIRM_EXAM_PAGE_URL = "https://mosalah-maker.github.io/mo/";
+const STATUSES = [
+    { value: 'قيد المراجعة', label: '⏳ قيد المراجعة', css: 'status-review' },
+    { value: 'تم التواصل', label: '📞 تم التواصل', css: 'status-contacted' },
+    { value: 'تحت التجهيز', label: '🔧 تحت التجهيز', css: 'status-preparing' },
+    { value: 'تم الانتهاء من التجهيز', label: '✔️ تم الانتهاء من التجهيز', css: 'status-ready' },
+    { value: 'تم تسليمه لمندوب الشحن', label: '🚚 تم تسليمه للشحن', css: 'status-shipped' },
+    { value: 'تم الاستلام', label: '✅ تم الاستلام', css: 'status-delivered' },
+    { value: 'ملغي', label: '❌ ملغي', css: 'status-cancelled' }
+];
+
+// ========== AUDIO SYNTHESIZER (Notification Chime) ==========
+function playNotificationSound() {
+    if (!soundEnabled) return;
+    try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, now); // D5
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.12); // A5
+        osc.frequency.exponentialRampToValueAtTime(1174.66, now + 0.25); // D6
+        
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.3, now + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+        
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        
+        osc.start(now);
+        osc.stop(now + 0.6);
+    } catch (e) {
+        console.log('Audio playback info:', e);
+    }
+}
+
+// ========== NOTIFICATION DISPATCHER (Native Android + Web) ==========
+function triggerNotification(title, message, type = 'info', targetId = null) {
+    // 1. Play chime sound
+    playNotificationSound();
+
+    // 2. Flutter JavaScript Channel Bridge
+    if (window.NotificationBridge && typeof window.NotificationBridge.postMessage === 'function') {
+        try {
+            window.NotificationBridge.postMessage(JSON.stringify({ title, message, type, targetId }));
+        } catch (e) {
+            console.error('NotificationBridge error:', e);
+        }
+    }
+
+    // 3. Native Android Interface Bridge
+    if (window.AndroidInterface && typeof window.AndroidInterface.showNotification === 'function') {
+        try {
+            window.AndroidInterface.showNotification(title, message);
+        } catch (e) {
+            console.error('AndroidInterface error:', e);
+        }
+    } else if ('Notification' in window && Notification.permission === 'granted') {
+        try {
+            new Notification(title, {
+                body: message,
+                icon: 'icon.png'
+            });
+        } catch (e) {
+            console.log('Web Notification info:', e);
+        }
+    }
+
+    // 3. In-App Visual Toast
+    showToast(`🔔 <strong>${title}</strong><br>${message}`);
+
+    // 4. Save to Notifications History
+    const notifObj = {
+        id: Date.now(),
+        title,
+        message,
+        type,
+        targetId,
+        time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+        date: new Date().toLocaleDateString('ar-EG')
+    };
+    notificationsHistory.unshift(notifObj);
+    if (notificationsHistory.length > 50) notificationsHistory.pop();
+    localStorage.setItem('appNotifications', JSON.stringify(notificationsHistory));
+    updateNotificationBadge();
+}
+
+function updateNotificationBadge() {
+    const badge = document.getElementById('notifBadge');
+    if (notificationsHistory.length > 0) {
+        badge.style.display = 'flex';
+        badge.textContent = notificationsHistory.length;
+    } else {
+        badge.style.display = 'none';
+    }
+}
+
+function openNotificationsModal() {
+    renderNotificationsList();
+    openModal('notificationsModal');
+}
+
+function renderNotificationsList() {
+    const listContainer = document.getElementById('notificationsList');
+    const countEl = document.getElementById('notifListCount');
+    countEl.textContent = `${notificationsHistory.length} إشعار`;
+
+    if (notificationsHistory.length === 0) {
+        listContainer.innerHTML = `
+            <div style="text-align: center; padding: 30px; color: rgba(243,232,255,0.4);">
+                <i class="fas fa-bell-slash" style="font-size: 35px; color: #F59E0B; margin-bottom: 10px; display: block;"></i>
+                لا توجد إشعارات حالياً
+            </div>
+        `;
+        return;
+    }
+
+    let html = '';
+    notificationsHistory.forEach(item => {
+        let iconClass = 'fa-bell';
+        if (item.type === 'headphone') iconClass = 'fa-headphones';
+        if (item.type === 'exam') iconClass = 'fa-graduation-cap';
+        if (item.type === 'proof') iconClass = 'fa-image';
+
+        html += `
+            <div class="notif-item" onclick="handleNotificationClick('${item.type}', '${item.targetId}')">
+                <div class="notif-item-icon"><i class="fas ${iconClass}"></i></div>
+                <div class="notif-item-content">
+                    <div class="notif-item-title">${item.title}</div>
+                    <div class="notif-item-body">${item.message}</div>
+                    <div class="notif-item-time">${item.date} - ${item.time}</div>
+                </div>
+            </div>
+        `;
+    });
+    listContainer.innerHTML = html;
+}
+
+function handleNotificationClick(type, targetId) {
+    closeModal('notificationsModal');
+    if (type === 'headphone' && targetId) {
+        switchTab('headphones', document.querySelector('.sidebar-nav a:first-child'));
+        openHDetail(targetId);
+    } else if (type === 'exam' && targetId) {
+        switchTab('exams', document.querySelectorAll('.sidebar-nav a')[1]);
+        openExamDetail(targetId);
+    }
+}
+
+function clearAllNotifications() {
+    notificationsHistory = [];
+    localStorage.removeItem('appNotifications');
+    updateNotificationBadge();
+    renderNotificationsList();
+    showToast('✅ تم مسح سجل الإشعارات');
+}
+
+function testNotification() {
+    triggerNotification('اختبار إشعار Abo Zahra 👑', 'نظام الإشعارات يعمل بكفاءة وبشكل مباشر على الهاتف!', 'info');
+}
+
+function requestNotificationPermission() {
+    if ('Notification' in window) {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                showToast('✅ تم تفعيل إذن الإشعارات بنجاح');
+                triggerNotification('مرحباً بك!', 'الإشعارات الفورية مفعلة الآن على تطبيقك.', 'info');
+            } else {
+                showToast('⚠️ لم يتم منح إذن الإشعارات');
+            }
+        });
+    } else {
+        showToast('ℹ️ يتم استخدام نظام إشعارات الأندرويد الأصلي');
+    }
+}
+
+function toggleSoundAlert() {
+    soundEnabled = !soundEnabled;
+    localStorage.setItem('soundEnabled', soundEnabled);
+    const btn = document.getElementById('soundToggleBtn');
+    btn.innerHTML = `<i class="fas fa-volume-${soundEnabled ? 'up' : 'mute'}"></i> صوت التنبيه: ${soundEnabled ? 'مفعل' : 'معطل'}`;
+    showToast(soundEnabled ? '🔊 تم تفعيل صوت التنبيه' : '🔇 تم كتم صوت التنبيه');
+    if (soundEnabled) playNotificationSound();
+}
+
+// ========== SETTINGS (Firebase) ==========
+async function saveSettings() {
+    const whatsapp = document.getElementById('siteWhatsApp').value.trim();
+    const cashNumber = document.getElementById('siteCashNumber').value.trim();
+    const cashAmount = document.getElementById('siteCashAmount').value.trim();
+    const examAmount = document.getElementById('siteExamAmount').value.trim();
+    
+    if (!whatsapp || !cashNumber || !cashAmount || !examAmount) {
+        showToast('⚠️ الرجاء ملء جميع الحقول');
+        return;
+    }
+    
+    try {
+        await db.collection('settings').doc('siteSettings').set({
+            whatsapp: whatsapp,
+            cashNumber: cashNumber,
+            cashAmount: cashAmount,
+            examAmount: examAmount,
+            updated_at: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        showToast('✅ تم حفظ الإعدادات بنجاح');
+        loadSettings();
+    } catch (err) {
+        console.error(err);
+        showToast('❌ حدث خطأ في حفظ الإعدادات');
+    }
+}
+
+async function loadSettings() {
+    try {
+        const doc = await db.collection('settings').doc('siteSettings').get();
+        if (doc.exists) {
+            const settings = doc.data();
+            document.getElementById('siteWhatsApp').value = settings.whatsapp || '';
+            document.getElementById('siteCashNumber').value = settings.cashNumber || '';
+            document.getElementById('siteCashAmount').value = settings.cashAmount || '';
+            document.getElementById('siteExamAmount').value = settings.examAmount || '';
+            updateSettingsDisplay(settings);
+        } else {
+            const defaultSettings = {
+                whatsapp: '01023456789',
+                cashNumber: '01023456789',
+                cashAmount: '150',
+                examAmount: '50'
+            };
+            document.getElementById('siteWhatsApp').value = defaultSettings.whatsapp;
+            document.getElementById('siteCashNumber').value = defaultSettings.cashNumber;
+            document.getElementById('siteCashAmount').value = defaultSettings.cashAmount;
+            document.getElementById('siteExamAmount').value = defaultSettings.examAmount;
+            updateSettingsDisplay(defaultSettings);
+        }
+    } catch (err) {
+        console.error('خطأ في تحميل الإعدادات:', err);
+    }
+}
+
+function updateSettingsDisplay(settings) {
+    document.getElementById('currentWhatsApp').textContent = `الحالي: ${settings.whatsapp || '—'}`;
+    document.getElementById('currentCashNumber').textContent = `الحالي: ${settings.cashNumber || '—'}`;
+    document.getElementById('currentCashAmount').textContent = `الحالي: ${settings.cashAmount || '—'}`;
+    document.getElementById('currentExamAmount').textContent = `الحالي: ${settings.examAmount || '—'}`;
+}
+
+async function getSettings() {
+    try {
+        const doc = await db.collection('settings').doc('siteSettings').get();
+        if (doc.exists) return doc.data();
+    } catch (err) {}
+    return {
+        whatsapp: '01023456789',
+        cashNumber: '01023456789',
+        cashAmount: '150',
+        examAmount: '50'
+    };
+}
+
+async function getSiteWhatsApp() {
+    const settings = await getSettings();
+    let number = settings.whatsapp || '201282235324';
+    number = number.replace(/[\s\+\-\(\)]/g, '');
+    if (number.startsWith('0')) number = '20' + number.substring(1);
+    else if (!number.startsWith('20') && !number.startsWith('+')) number = '20' + number;
+    return number;
+}
+async function getSiteCashNumber() { return (await getSettings()).cashNumber || '01023456789'; }
+async function getSiteCashAmount() { return (await getSettings()).cashAmount || '150'; }
+async function getSiteExamAmount() { return (await getSettings()).examAmount || '50'; }
+
+// WhatsApp Messages
+async function buildHInvoiceMessage(data, status, paymentConfirmed) {
+    const name = data.name || 'العميل';
+    const phone = data.phone || '';
+    const address = data.address || '';
+    const device = data.device || '';
+    const question = data.question || 'لا يوجد';
+    const deliveryDate = data.delivery_date || 'لم يحدد';
+    const orderDate = formatDate(data.created_at);
+    const paymentStatus = paymentConfirmed ? '✅ تم دفع رسوم الشحن' : '⏳ لم يتم الدفع بعد';
+    const cashNumber = await getSiteCashNumber();
+    const cashAmount = await getSiteCashAmount();
+    
+    let statusMessage = '';
+    switch(status) {
+        case 'تحت التجهيز': statusMessage = '🔧 طلبك قيد التجهيز'; break;
+        case 'تم الانتهاء من التجهيز': statusMessage = '✔️ تم تجهيز طلبك'; break;
+        case 'تم تسليمه لمندوب الشحن': statusMessage = '🚚 تم تسليم طلبك للشحن'; break;
+        case 'تم الاستلام': statusMessage = '✅ تم استلام طلبك بنجاح'; break;
+        case 'تم التواصل': statusMessage = '📞 تم التواصل معك'; break;
+        case 'ملغي': statusMessage = '❌ تم إلغاء طلبك'; break;
+        default: statusMessage = `📌 تم تحديث حالتك إلى: ${status}`;
+    }
+    
+    return `🏷️ *Abo Zahra للإلكترونيات - فاتورة الحجز*
+━━━━━━━━━━━━━━━━━━━━
+👤 *العميل:* ${name}
+📞 *الجوال:* ${phone}
+📍 *العنوان:* ${address}
+━━━━━━━━━━━━━━━━━━━━
+🎧 *المنتج:* سماعة ${device}
+📅 *التسليم:* ${deliveryDate}
+🕐 *تاريخ الحجز:* ${orderDate}
+💬 *ملاحظات:* ${question}
+━━━━━━━━━━━━━━━━━━━━
+💰 *حالة الدفع:* ${paymentStatus}
+📌 *حالة الطلب:* ${status}
+${statusMessage}
+━━━━━━━━━━━━━━━━━━━━
+📱 *رقم التحويل:* ${cashNumber}
+💵 *المبلغ:* ${cashAmount} جنيه
+شكراً لاختياركم Abo Zahra`;
+}
+
+async function sendHConfirmationWA(phone, name, reservationId) {
+    const link = getConfirmationLink(reservationId);
+    const formattedPhone = formatPhoneForWA(phone);
+    const cashNumber = await getSiteCashNumber();
+    const cashAmount = await getSiteCashAmount();
+    const message = `🌹 مرحباً ${name}،
+
+نشكرك على حجزك في Abo Zahra للإلكترونيات 🎧
+
+للتأكيد حجزك، يرجى تحويل مبلغ ${cashAmount} جنيه (تأمين الشحن) على رقم فودافون كاش:
+📱 ${cashNumber}
+📌 باسم: Abo Zahra
+
+🔗 بعد التحويل، اضغط على الرابط التالي لرفع إسكرين التحويل:
+${link}
+
+📸 خطوات بسيطة:
+1️⃣ حول المبلغ
+2️⃣ افتح الرابط
+3️⃣ ارفع صورة الإسكرين
+4️⃣ اكتب رقم التليفون اللي حولت منه
+5️⃣ اضغط إرسال
+
+سيتم إشعارنا فور وصول الإسكرين.
+
+شكراً لثقتك 🤍
+Abo Zahra للإلكترونيات`;
+    window.open(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`, '_blank');
+}
+
+async function sendExamConfirmationWA(id) {
+    const r = allExams.find(r => r.id === id);
+    if (!r) return;
+    const d = r.data;
+    const link = getConfirmationExamLink(id);
+    const phone = d.phone;
+    if (!phone) { showToast('⚠️ لا يوجد رقم واتساب'); return; }
+    
+    const cashNumber = await getSiteCashNumber();
+    const examAmount = await getSiteExamAmount();
+    
+    const message = `🎓 *تأكيد حجز الامتحان - Abo Zahra*
+━━━━━━━━━━━━━━━━━━━━
+👤 *الاسم:* ${d.name || '—'}
+📚 *الشعبة:* ${d.section || '—'}
+━━━━━━━━━━━━━━━━━━━━
+💰 لتأكيد حجزك، يرجى تحويل مبلغ ${examAmount} جنيه على رقم فودافون كاش:
+📱 ${cashNumber}
+📌 باسم: Abo Zahra
+
+🔗 بعد التحويل، اضغط على الرابط التالي لرفع إسكرين التحويل:
+${link}
+
+📌 سيتم تفعيل رابط الامتحان بعد تأكيد التحويل.
+
+شكراً لثقتكم 🤍
+Abo Zahra للخدمات التعليمية`;
+    
+    window.open(`https://wa.me/${formatPhoneForWA(phone)}?text=${encodeURIComponent(message)}`, '_blank');
+}
+
+async function sendExamConfirmedWA(id) {
+    const r = allExams.find(r => r.id === id);
+    if (!r) return;
+    const d = r.data;
+    const phone = d.phone;
+    if (!phone) { showToast('⚠️ لا يوجد رقم واتساب'); return; }
+    
+    const confirmationLink = getConfirmationExamLink(id);
+    const message = `🎓 *تم تأكيد حجز الامتحان - Abo Zahra*
+━━━━━━━━━━━━━━━━━━━━
+👤 *الاسم:* ${d.name || '—'}
+📚 *الشعبة:* ${d.section || '—'}
+━━━━━━━━━━━━━━━━━━━━
+✅ *تم تأكيد حجزك بنجاح!*
+
+📌 للحصول على رابط الامتحان الخاص بك، قم بالدخول إلى الرابط التالي:
+🔗 ${confirmationLink}
+
+شكراً لثقتكم 🤍
+Abo Zahra للخدمات التعليمية`;
+    
+    window.open(`https://wa.me/${formatPhoneForWA(phone)}?text=${encodeURIComponent(message)}`, '_blank');
+}
+
+async function sendExamWA(id) {
+    const r = allExams.find(r => r.id === id);
+    if (!r) return;
+    const d = r.data;
+    const phone = d.phone;
+    if (!phone) { showToast('⚠️ لا يوجد رقم واتساب'); return; }
+    
+    const link = await getExamLinkForSection(d.section || '');
+    const message = `🎓 *تأكيد حجز الامتحان - Abo Zahra*
+━━━━━━━━━━━━━━━━━━━━
+👤 *الاسم:* ${d.name || '—'}
+📚 *الشعبة:* ${d.section || '—'}
+━━━━━━━━━━━━━━━━━━━━
+✅ *تم تأكيد حجزك بنجاح*
+
+🔗 *رابط الامتحان:*
+${link || 'لم يتم تحديد رابط لهذه الشعبة بعد'}
+
+شكراً لثقتكم 🤍
+Abo Zahra للخدمات التعليمية`;
+    
+    window.open(`https://wa.me/${formatPhoneForWA(phone)}?text=${encodeURIComponent(message)}`, '_blank');
+}
+
+// Toast
+function showToast(msg) {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = msg;
+    document.getElementById('toastContainer').appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3800);
+}
+
+// Sidebar
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebarOverlay').classList.toggle('open');
+}
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+
+// Tab Switching
+function switchTab(tab, el) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    if (el) el.classList.add('active');
+    
+    const titles = {
+        headphones: '<i class="fas fa-headphones" style="color:#F59E0B;"></i> إدارة حجوزات السماعات',
+        exams: '<i class="fas fa-graduation-cap" style="color:#F59E0B;"></i> إدارة حجوزات الامتحانات',
+        products: '<i class="fas fa-box" style="color:#F59E0B;"></i> إدارة المنتجات والأسعار',
+        sections: '<i class="fas fa-layer-group" style="color:#F59E0B;"></i> إدارة الشعب والروابط',
+        settings: '<i class="fas fa-cog" style="color:#F59E0B;"></i> إعدادات التطبيق والإشعارات'
+    };
+    if (titles[tab]) document.getElementById('pageTitle').innerHTML = titles[tab];
+
+    if (window.innerWidth < 1000) {
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('sidebarOverlay').classList.remove('open');
+    }
+
+    if (tab === 'exams') loadExams();
+    if (tab === 'headphones') loadHeadphones();
+    if (tab === 'products') loadProducts();
+    if (tab === 'sections') loadSections();
+    if (tab === 'settings') loadSettings();
+}
+
+function formatDate(ts) {
+    if (!ts) return '—';
+    let d = ts.toDate ? ts.toDate() : (ts.seconds ? new Date(ts.seconds * 1000) : new Date(ts));
+    return d.toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+function formatPhoneForWA(phone) {
+    if (!phone) return '';
+    let cleaned = phone.replace(/[\s\-\+\(\)]/g, '');
+    if (cleaned.startsWith('00')) cleaned = cleaned.substring(2);
+    if (cleaned.startsWith('+')) cleaned = cleaned.substring(1);
+    if (cleaned.startsWith('0')) cleaned = '20' + cleaned.substring(1);
+    if (!cleaned.startsWith('20')) cleaned = '20' + cleaned;
+    return cleaned;
+}
+
+function isNew(ts) {
+    if (!ts) return false;
+    let d = ts.toDate ? ts.toDate() : (ts.seconds ? new Date(ts.seconds * 1000) : new Date(ts));
+    return (Date.now() - d.getTime()) < 3600000;
+}
+
+function getConfirmationLink(reservationId) { return `${CONFIRM_PAGE_URL}?id=${reservationId}`; }
+function getConfirmationExamLink(reservationId) { return `${CONFIRM_EXAM_PAGE_URL}?id=${reservationId}`; }
+
+function previewProductImage(input) {
+    const container = document.getElementById('imagePreviewContainer');
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            container.innerHTML = `<img src="${e.target.result}" style="max-width:200px;max-height:200px;border-radius:12px;border:2px solid rgba(245,158,11,0.2);">`;
+        }
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        container.innerHTML = '';
+    }
+}
+
+async function uploadToImgBB(file) {
+    const progressEl = document.getElementById('uploadProgress');
+    progressEl.classList.add('active');
+    try {
+        const formData = new FormData();
+        formData.append('key', IMGBB_API_KEY);
+        formData.append('image', file);
+        const response = await fetch('https://api.imgbb.com/1/upload', {
+            method: 'POST',
+            body: formData
+        });
+        const result = await response.json();
+        progressEl.classList.remove('active');
+        if (result.success) return result.data.url;
+        throw new Error(result.error?.message || 'فشل رفع الصورة');
+    } catch (error) {
+        progressEl.classList.remove('active');
+        throw error;
+    }
+}
+
+// Discount
+function getDiscount() { return localStorage.getItem('productDiscount') || '0'; }
+function setDiscount(value) { localStorage.setItem('productDiscount', value); updateDiscountUI(); }
+function updateDiscountUI() {
+    const discount = getDiscount();
+    const statusEl = document.getElementById('discountStatus');
+    if (discount && parseFloat(discount) > 0) {
+        statusEl.className = 'discount-status active';
+        statusEl.innerHTML = `✅ الخصم مفعل: ${discount}%`;
+        document.getElementById('discountInput').value = discount;
+    } else {
+        statusEl.className = 'discount-status inactive';
+        statusEl.innerHTML = '⛔ الخصم غير مفعل';
+        document.getElementById('discountInput').value = '';
+    }
+}
+function applyDiscountToAll() {
+    const value = document.getElementById('discountInput').value.trim();
+    if (!value || isNaN(value) || parseFloat(value) < 0 || parseFloat(value) > 100) {
+        showToast('⚠️ الرجاء إدخال نسبة خصم صحيحة (0-100)');
+        return;
+    }
+    setDiscount(value);
+    showToast(`✅ تم تفعيل الخصم بنسبة ${value}% على جميع المنتجات`);
+    loadProducts();
+}
+function clearDiscount() { setDiscount('0'); showToast('✅ تم إلغاء الخصم'); loadProducts(); }
+
+// Products
+function openProductModal(productId) {
+    document.getElementById('editPId').value = '';
+    document.getElementById('editPName').value = '';
+    document.getElementById('editPDesc').value = '';
+    document.getElementById('editPPrice').value = '';
+    document.getElementById('editPImage').value = '';
+    document.getElementById('imagePreviewContainer').innerHTML = '';
+    document.getElementById('productModalTitle').textContent = 'إضافة منتج جديد';
+    
+    if (productId) {
+        const product = allProducts.find(p => p.id === productId);
+        if (product) {
+            document.getElementById('editPId').value = productId;
+            document.getElementById('editPName').value = product.data.name || '';
+            document.getElementById('editPDesc').value = product.data.description || '';
+            document.getElementById('editPPrice').value = product.data.price || '';
+            document.getElementById('productModalTitle').textContent = 'تعديل المنتج';
+            if (product.data.image) {
+                document.getElementById('imagePreviewContainer').innerHTML = `<img src="${product.data.image}" style="max-width:200px;max-height:200px;border-radius:12px;border:2px solid rgba(245,158,11,0.2);">`;
+            }
+        }
+    }
+    openModal('productModal');
+}
+
+async function saveProduct() {
+    const id = document.getElementById('editPId').value;
+    const name = document.getElementById('editPName').value.trim();
+    const description = document.getElementById('editPDesc').value.trim();
+    const price = parseFloat(document.getElementById('editPPrice').value);
+    const imageFile = document.getElementById('editPImage').files[0];
+    
+    if (!name || !price) {
+        showToast('⚠️ اسم المنتج والسعر مطلوبين');
+        return;
+    }
+    
+    try {
+        let imageUrl = '';
+        if (imageFile) {
+            imageUrl = await uploadToImgBB(imageFile);
+            showToast('✅ تم رفع الصورة إلى ImgBB');
+        }
+        
+        const data = {
+            name, description, price,
+            updated_at: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        if (imageUrl) data.image = imageUrl;
+        
+        if (id) {
+            await db.collection('products').doc(id).update(data);
+            showToast('✅ تم تحديث المنتج');
+        } else {
+            data.created_at = firebase.firestore.FieldValue.serverTimestamp();
+            await db.collection('products').add(data);
+            showToast('✅ تم إضافة المنتج');
+        }
+        closeModal('productModal');
+        loadProducts();
+    } catch (err) {
+        showToast('❌ حدث خطأ أثناء الحفظ: ' + err.message);
+    }
+}
+
+function deleteProduct(id) {
+    deleteId = id;
+    deleteType = 'product';
+    document.getElementById('confirmYes').onclick = async () => {
+        if (deleteId && deleteType === 'product') {
+            try {
+                await db.collection('products').doc(deleteId).delete();
+                showToast('✅ تم حذف المنتج');
+                closeModal('confirmModal');
+                deleteId = null;
+                deleteType = null;
+                loadProducts();
+            } catch (err) { showToast('❌ حدث خطأ'); }
+        }
+    };
+    openModal('confirmModal');
+}
+
+function loadProducts() {
+    db.collection('products').orderBy('created_at', 'desc').onSnapshot(snapshot => {
+        allProducts = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
+        renderProducts(allProducts);
+    }, err => console.error(err));
+}
+
+function renderProducts(products) {
+    const tbody = document.getElementById('pTableBody');
+    const mobile = document.getElementById('pMobileCards');
+    const discount = parseFloat(getDiscount()) || 0;
+    
+    if (products.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7"><div class="loading-state"><div style="font-size:45px;margin-bottom:10px;"><i class="fas fa-box" style="color:#F59E0B;"></i></div><h3 style="color:#D4C4E6;">لا توجد منتجات</h3></div></td></tr>`;
+        mobile.innerHTML = '<div class="loading-state"><div style="font-size:45px;margin-bottom:10px;"><i class="fas fa-box" style="color:#F59E0B;"></i></div><h3 style="color:#D4C4E6;">لا توجد منتجات</h3></div>';
+        document.getElementById('pShowingCount').textContent = 'عرض 0 منتج';
+        document.getElementById('pTotalCount').textContent = 'الإجمالي: 0';
+        return;
+    }
+    
+    let tableHTML = '', mobileHTML = '';
+    products.forEach((product, idx) => {
+        const d = product.data;
+        const price = d.price || 0;
+        const discountedPrice = discount > 0 ? price - (price * (discount / 100)) : price;
+        const imageHtml = d.image ? `<img src="${d.image}" class="product-image-thumb" alt="${d.name}" onerror="this.style.display='none'">` : '<i class="fas fa-box" style="font-size:30px;color:#F59E0B;"></i>';
+        
+        tableHTML += `<tr>
+            <td>${idx+1}</td>
+            <td>${imageHtml}</td>
+            <td><span style="font-weight:800;color:#F59E0B;">${d.name || '—'}</span></td>
+            <td>${d.description ? d.description.substring(0,50)+(d.description.length>50?'...':'') : '—'}</td>
+            <td>${price} ج.م</td>
+            <td>${discount > 0 ? `<span style="color:#34D399;">${discountedPrice.toFixed(2)} ج.م</span> <span style="color:#F87171;font-size:11px;text-decoration:line-through;">${price} ج.م</span>` : `${price} ج.م`}</td>
+            <td><div class="actions-cell">
+                <button class="action-btn edit" onclick="openProductModal('${product.id}')"><i class="fas fa-edit"></i></button>
+                <button class="action-btn delete" onclick="deleteProduct('${product.id}')"><i class="fas fa-trash"></i></button>
+            </div></td>
+        </tr>`;
+        
+        mobileHTML += `<div class="mobile-card">
+            <div class="mobile-card-header">
+                <div class="mobile-card-name">${d.name || '—'}</div>
+            </div>
+            <div class="mobile-card-body">
+                <div class="mobile-card-row"><span class="mobile-card-label">📝 الوصف</span><span class="mobile-card-value">${d.description ? d.description.substring(0,30)+'...' : '—'}</span></div>
+                <div class="mobile-card-row"><span class="mobile-card-label">💰 السعر</span><span class="mobile-card-value">${price} ج.م</span></div>
+                ${discount > 0 ? `<div class="mobile-card-row"><span class="mobile-card-label">🏷️ بعد الخصم</span><span class="mobile-card-value" style="color:#34D399;">${discountedPrice.toFixed(2)} ج.م</span></div>` : ''}
+            </div>
+            <div class="mobile-card-actions">
+                <button class="action-btn edit" onclick="openProductModal('${product.id}')"><i class="fas fa-edit"></i></button>
+                <button class="action-btn delete" onclick="deleteProduct('${product.id}')"><i class="fas fa-trash"></i></button>
+            </div>
+        </div>`;
+    });
+    
+    tbody.innerHTML = tableHTML;
+    mobile.innerHTML = mobileHTML;
+    document.getElementById('pShowingCount').textContent = `عرض ${products.length} منتج`;
+    document.getElementById('pTotalCount').textContent = `الإجمالي: ${products.length}`;
+}
+
+// Headphones
+function getHStatusCSS(s) { const st = STATUSES.find(st => st.value === s); return st ? st.css : 'status-review'; }
+function getHStatusLabel(s) { const st = STATUSES.find(st => st.value === s); return st ? st.label : '⏳ قيد المراجعة'; }
+
+function loadHeadphones() {
+    db.collection('reservations').orderBy('created_at', 'desc').onSnapshot(snapshot => {
+        // Notification check on new items
+        snapshot.docChanges().forEach(change => {
+            const data = change.doc.data();
+            const id = change.doc.id;
+            
+            if (change.type === 'added') {
+                if (!isInitialHeadphonesLoad && !knownHeadphoneIds.has(id)) {
+                    triggerNotification(
+                        '🎧 حجز سماعة جديد!',
+                        `حجز جديد باسم: ${data.name || 'عميل'} (${data.device || 'سماعة'})`,
+                        'headphone',
+                        id
+                    );
+                }
+                knownHeadphoneIds.add(id);
+            } else if (change.type === 'modified') {
+                if (data.payment_proof_url && !change.oldIndex && isNew(data.payment_submitted_at)) {
+                    triggerNotification(
+                        '📸 إسكرين تحويل جديد!',
+                        `قام العميل ${data.name || ''} برفع إسكرين التحويل.`,
+                        'proof',
+                        id
+                    );
+                }
+            }
+        });
+        isInitialHeadphonesLoad = false;
+
+        allHeadphones = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
+        filterHeadphones();
+    }, err => console.error(err));
+}
+
+function filterHeadphones() {
+    const search = document.getElementById('hSearchInput').value.toLowerCase();
+    const statusFilter = document.getElementById('hStatusFilter').value;
+    const proofFilter = document.getElementById('hProofFilter').value;
+    
+    const filtered = allHeadphones.filter(r => {
+        const d = r.data;
+        const status = d.status || 'قيد المراجعة';
+        const matchSearch = !search || (d.name || '').toLowerCase().includes(search) || (d.phone || '').includes(search) || (d.device || '').toLowerCase().includes(search);
+        const matchStatus = statusFilter === 'all' || status === statusFilter;
+        const matchProof = proofFilter === 'all' || (proofFilter === 'has_proof' ? !!d.payment_proof_url : !d.payment_proof_url);
+        return matchSearch && matchStatus && matchProof;
+    });
+    renderHeadphones(filtered);
+    updateHeadphoneStats(filtered);
+}
+
+function statusSelectHTML(docId, currentStatus) {
+    let options = STATUSES.map(s => `<option value="${s.value}" ${s.value === currentStatus ? 'selected' : ''}>${s.label}</option>`).join('');
+    return `<select class="status-select" onchange="updateHStatus('${docId}', this.value, this)">${options}</select>`;
+}
+
+async function updateHStatus(docId, newStatus, selectEl) {
+    try {
+        await db.collection('reservations').doc(docId).update({ status: newStatus });
+        showToast('✅ تم تحديث حالة الطلب');
+        await sendHStatusWA(docId);
+    } catch (err) { showToast('❌ حدث خطأ'); }
+}
+
+async function sendHStatusWA(docId) {
+    const r = allHeadphones.find(r => r.id === docId);
+    if (!r) return;
+    const d = r.data;
+    const invoice = await buildHInvoiceMessage(d, d.status || 'قيد المراجعة', d.payment_confirmed === true);
+    if (d.phone) window.open(`https://wa.me/${formatPhoneForWA(d.phone)}?text=${encodeURIComponent(invoice)}`, '_blank');
+}
+
+async function confirmHPayment(docId) {
+    const reservation = allHeadphones.find(r => r.id === docId);
+    if (!reservation) return;
+    try {
+        await db.collection('reservations').doc(docId).update({ payment_confirmed: true });
+        showToast('✅ تم تأكيد دفع مبلغ الشحن');
+        const invoice = await buildHInvoiceMessage(reservation.data, reservation.data.status || 'قيد المراجعة', true);
+        if (reservation.data.phone) window.open(`https://wa.me/${formatPhoneForWA(reservation.data.phone)}?text=${encodeURIComponent(invoice)}`, '_blank');
+    } catch (err) { showToast('❌ حدث خطأ'); }
+}
+
+function viewHProof(reservationId) {
+    const res = allHeadphones.find(r => r.id === reservationId);
+    if (!res || !res.data.payment_proof_url) { showToast('لا يوجد إسكرين مرفوع'); return; }
+    const d = res.data;
+    document.getElementById('proofContent').innerHTML = `<div class="detail-grid"><div class="detail-item"><div class="detail-label">العميل</div><div class="detail-value">${d.name || '—'}</div></div><div class="detail-item"><div class="detail-label">رقم المحول منه</div><div class="detail-value">${d.sender_phone || '—'}</div></div><div class="detail-item"><div class="detail-label">تاريخ الإرسال</div><div class="detail-value">${formatDate(d.payment_submitted_at)}</div></div><div class="detail-item"><div class="detail-label">الإسكرين</div><img src="${d.payment_proof_url}" class="proof-image" onclick="window.open('${d.payment_proof_url}', '_blank')"></div></div>`;
+    document.getElementById('proofFooter').innerHTML = `<button class="btn btn-outline" onclick="closeModal('proofModal')">إغلاق</button>`;
+    openModal('proofModal');
+}
+
+function openHEdit(docId) {
+    const r = allHeadphones.find(r => r.id === docId);
+    if (!r) return;
+    const d = r.data;
+    document.getElementById('editHId').value = docId;
+    document.getElementById('editHName').value = d.name || '';
+    document.getElementById('editHPhone').value = d.phone || '';
+    document.getElementById('editHAddress').value = d.address || '';
+    document.getElementById('editHDevice').value = d.device || '';
+    document.getElementById('editHDeliveryDate').value = d.delivery_date || '';
+    document.getElementById('editHQuestion').value = d.question || '';
+    openModal('editHeadphoneModal');
+}
+
+async function saveHEdit() {
+    const docId = document.getElementById('editHId').value;
+    const updates = {
+        name: document.getElementById('editHName').value.trim(),
+        phone: document.getElementById('editHPhone').value.trim(),
+        address: document.getElementById('editHAddress').value.trim(),
+        device: document.getElementById('editHDevice').value.trim(),
+        delivery_date: document.getElementById('editHDeliveryDate').value,
+        question: document.getElementById('editHQuestion').value.trim()
+    };
+    if (!updates.name || !updates.phone) { showToast('⚠️ املأ الحقول المطلوبة'); return; }
+    try { 
+        await db.collection('reservations').doc(docId).update(updates); 
+        showToast('✅ تم التحديث'); 
+        closeModal('editHeadphoneModal'); 
+    } catch (err) { showToast('❌ حدث خطأ'); }
+}
+
+function openHDetail(docId) {
+    const r = allHeadphones.find(r => r.id === docId);
+    if (!r) return;
+    const d = r.data;
+    const paymentBadge = d.payment_confirmed ? '<span class="payment-badge">💰 مدفوع</span>' : '<span class="payment-badge not-paid">⏳ غير مدفوع</span>';
+    const hasProof = !!d.payment_proof_url;
+    let proofSection = hasProof ? `<div class="detail-item"><div class="detail-label">📸 إسكرين التحويل</div><button class="btn btn-outline" onclick="closeModal('detailHeadphoneModal'); viewHProof('${docId}')">عرض الإسكرين</button></div>` : '';
+    const status = d.status || 'قيد المراجعة';
+    
+    document.getElementById('detailHContent').innerHTML = `<div class="detail-grid"><div class="detail-item"><div class="detail-label">الاسم</div><div class="detail-value">${d.name || '—'}</div></div><div class="detail-item"><div class="detail-label">التليفون</div><div class="detail-value">${d.phone || '—'}</div></div><div class="detail-item"><div class="detail-label">العنوان</div><div class="detail-value">${d.address || '—'}</div></div><div class="detail-item"><div class="detail-label">المنتج</div><div class="detail-value">${d.device || '—'}</div></div><div class="detail-item"><div class="detail-label">التسليم</div><div class="detail-value">${d.delivery_date || '—'}</div></div><div class="detail-item"><div class="detail-label">تاريخ الحجز</div><div class="detail-value">${formatDate(d.created_at)}</div></div><div class="detail-item"><div class="detail-label">الاستفسار</div><div class="detail-value">${d.question || 'لا يوجد'}</div></div><div class="detail-item"><div class="detail-label">حالة الدفع</div><div class="detail-value">${paymentBadge}</div></div><div class="detail-item"><div class="detail-label">حالة الطلب</div><div class="detail-value"><span class="status-badge ${getHStatusCSS(status)}">${getHStatusLabel(status)}</span></div></div>${proofSection}</div>`;
+    
+    document.getElementById('detailHFooter').innerHTML = `
+        <button class="btn btn-primary" onclick="closeModal('detailHeadphoneModal'); openHEdit('${docId}')"><i class="fas fa-edit"></i> تعديل</button>
+        <a href="tel:${d.phone}" class="btn btn-success"><i class="fas fa-phone"></i> اتصال</a>
+        <a href="https://wa.me/${formatPhoneForWA(d.phone)}?text=${encodeURIComponent('مرحباً ' + (d.name || ''))}" target="_blank" class="btn btn-success" style="background:#25D366;"><i class="fab fa-whatsapp"></i> واتساب</a>
+        <button class="btn btn-outline" onclick="sendHConfirmationWA('${d.phone}', '${d.name}', '${docId}')" style="background:#25D366;color:#fff;"><i class="fas fa-link"></i> رابط التأكيد</button>
+        ${!d.payment_confirmed ? `<button class="btn btn-primary" onclick="confirmHPayment('${docId}')"><i class="fas fa-check-circle"></i> تأكيد الدفع</button>` : ''}
+        <button class="btn btn-outline" onclick="sendHStatusWA('${docId}')"><i class="fas fa-paper-plane"></i> إرسال الحالة</button>
+        <button class="btn btn-outline" onclick="closeModal('detailHeadphoneModal')">إغلاق</button>
+    `;
+    openModal('detailHeadphoneModal');
+}
+
+function confirmHDelete(docId) {
+    deleteId = docId;
+    deleteType = 'headphone';
+    document.getElementById('confirmYes').onclick = async () => {
+        if (deleteId && deleteType === 'headphone') {
+            try {
+                await db.collection('reservations').doc(deleteId).delete();
+                showToast('✅ تم الحذف');
+                closeModal('confirmModal');
+                deleteId = null;
+                deleteType = null;
+            } catch (err) { showToast('❌ حدث خطأ'); }
+        }
+    };
+    openModal('confirmModal');
+}
+
+function renderHeadphones(reservations) {
+    const tbody = document.getElementById('hTableBody');
+    const mobile = document.getElementById('hMobileCards');
+    if (reservations.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="11"><div class="loading-state"><div style="font-size:45px;margin-bottom:10px;"><i class="fas fa-headphones" style="color:#F59E0B;"></i></div><h3 style="color:#D4C4E6;">لا توجد حجوزات</h3></div></td></tr>`;
+        mobile.innerHTML = '<div class="loading-state"><div style="font-size:45px;margin-bottom:10px;"><i class="fas fa-headphones" style="color:#F59E0B;"></i></div><h3 style="color:#D4C4E6;">لا توجد حجوزات</h3></div>';
+        document.getElementById('hShowingCount').textContent = 'عرض 0 حجز';
+        return;
+    }
+    let tableHTML = '', mobileHTML = '';
+    reservations.forEach((res, idx) => {
+        const d = res.data, id = res.id, status = d.status || 'قيد المراجعة';
+        const paymentConfirmed = d.payment_confirmed === true;
+        const hasProof = !!d.payment_proof_url;
+        const newBadge = isNew(d.created_at) ? '<span class="new-badge">جديد</span>' : '';
+        const paymentBadge = paymentConfirmed ? '<span class="payment-badge">💰 مدفوع</span>' : '<span class="payment-badge not-paid">⏳ غير مدفوع</span>';
+        const proofBtn = hasProof ? `<button class="proof-btn green" onclick="viewHProof('${id}')" title="عرض الإسكرين"><i class="fas fa-image"></i></button>` : `<button class="proof-btn red" onclick="sendHConfirmationWA('${d.phone}', '${d.name}', '${id}')" title="إرسال رابط التأكيد"><i class="fas fa-image"></i></button>`;
+        
+        tableHTML += `<tr><td>${idx+1}</td><td><span style="font-weight:800;color:#F59E0B;">${newBadge}${d.name || '—'}</span></td><td style="direction:ltr;">${d.phone || '—'}</td><td>${d.address ? d.address.substring(0,30)+(d.address.length>30?'...':'') : '—'}</td><td><span style="color:#FCD34D;">🎧 ${(d.device || '—').substring(0,40)}</span></td><td>${d.delivery_date || '—'}</td><td style="font-size:12px;">${formatDate(d.created_at)}</td><td>${paymentBadge}</td><td>${statusSelectHTML(id, status)}</td><td style="text-align:center;">${proofBtn}</td><td><div class="actions-cell"><button class="action-btn view" onclick="openHDetail('${id}')"><i class="fas fa-eye"></i></button><button class="action-btn edit" onclick="openHEdit('${id}')"><i class="fas fa-edit"></i></button><button class="action-btn call" onclick="window.open('tel:${d.phone}')"><i class="fas fa-phone"></i></button><button class="action-btn whatsapp" onclick="window.open('https://wa.me/${formatPhoneForWA(d.phone)}?text=${encodeURIComponent('مرحباً '+(d.name||''))}', '_blank')"><i class="fab fa-whatsapp"></i></button>${!paymentConfirmed ? `<button class="action-btn payment" onclick="confirmHPayment('${id}')"><i class="fas fa-check-circle"></i></button>` : ''}<button class="action-btn status-wa" onclick="sendHStatusWA('${id}')"><i class="fas fa-paper-plane"></i></button><button class="action-btn delete" onclick="confirmHDelete('${id}')"><i class="fas fa-trash"></i></button></div></td></tr>`;
+        
+        mobileHTML += `<div class="mobile-card"><div class="mobile-card-header"><div class="mobile-card-name">${newBadge}${d.name || '—'}</div><button class="action-btn view" onclick="openHDetail('${id}')"><i class="fas fa-eye"></i></button></div><div class="mobile-card-body"><div class="mobile-card-row"><span class="mobile-card-label">📱 التليفون</span><span class="mobile-card-value">${d.phone || '—'}</span></div><div class="mobile-card-row"><span class="mobile-card-label">📍 العنوان</span><span class="mobile-card-value">${d.address || '—'}</span></div><div class="mobile-card-row"><span class="mobile-card-label">🎧 المنتج</span><span class="mobile-card-value">${(d.device || '—').substring(0,30)}</span></div><div class="mobile-card-row"><span class="mobile-card-label">💰 الدفع</span><span class="mobile-card-value">${paymentConfirmed ? '✅ مدفوع' : '⏳ غير مدفوع'}</span></div></div><div class="mobile-card-status">${statusSelectHTML(id, status)}</div><div class="mobile-card-actions"><button class="action-btn edit" onclick="openHEdit('${id}')"><i class="fas fa-edit"></i></button><button class="action-btn call" onclick="window.open('tel:${d.phone}')"><i class="fas fa-phone"></i></button><button class="action-btn whatsapp" onclick="window.open('https://wa.me/${formatPhoneForWA(d.phone)}?text=${encodeURIComponent('مرحباً '+(d.name||''))}', '_blank')"><i class="fab fa-whatsapp"></i></button>${!paymentConfirmed ? `<button class="action-btn payment" onclick="confirmHPayment('${id}')"><i class="fas fa-check-circle"></i></button>` : ''}<button class="action-btn delete" onclick="confirmHDelete('${id}')"><i class="fas fa-trash"></i></button></div></div>`;
+    });
+    tbody.innerHTML = tableHTML;
+    mobile.innerHTML = mobileHTML;
+    document.getElementById('hShowingCount').textContent = `عرض ${reservations.length} حجز`;
+}
+
+function updateHeadphoneStats(reservations) {
+    document.getElementById('hStatTotal').textContent = reservations.length;
+    document.getElementById('hStatNew').textContent = reservations.filter(r => (r.data.status || 'قيد المراجعة') === 'قيد المراجعة').length;
+    document.getElementById('hStatPaid').textContent = reservations.filter(r => r.data.payment_confirmed === true).length;
+    document.getElementById('hStatProof').textContent = reservations.filter(r => r.data.payment_proof_url).length;
+    document.getElementById('hStatPreparing').textContent = reservations.filter(r => r.data.status === 'تحت التجهيز').length;
+    document.getElementById('hStatDelivered').textContent = reservations.filter(r => r.data.status === 'تم الاستلام').length;
+    document.getElementById('hTotalCount').textContent = `الإجمالي: ${reservations.length}`;
+}
+
+// Sections
+function loadSections() {
+    db.collection('exam_sections').orderBy('name', 'asc').onSnapshot(snapshot => {
+        allSections = snapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name, exam_link: doc.data().exam_link || '' }));
+        renderSections();
+        updateSectionFilter();
+    }, err => console.error(err));
+}
+
+function renderSections() {
+    const container = document.getElementById('sectionsList');
+    if (allSections.length === 0) {
+        container.innerHTML = `<div style="text-align:center;padding:25px;color:rgba(243,232,255,0.4);"><i class="fas fa-layer-group" style="font-size:35px;color:#F59E0B;margin-bottom:10px;display:block;"></i>لا توجد شعب مضافة</div>`;
+        return;
+    }
+    let html = '';
+    allSections.forEach((section, idx) => {
+        const savedLink = section.exam_link || '';
+        html += `
+            <div class="section-item">
+                <div class="section-info" style="flex:1;">
+                    <span style="color:#FCD34D; font-weight:700;">${idx+1}. ${section.name}</span>
+                    <div class="exam-link-input">
+                        <input type="url" id="sectionLink_${section.id}" placeholder="رابط الامتحان لهذه الشعبة" value="${savedLink}">
+                        <button class="btn btn-primary btn-sm" onclick="saveSectionExamLink('${section.id}', '${section.name}')"><i class="fas fa-save"></i> حفظ</button>
+                        <button class="btn btn-copy btn-sm" onclick="copySectionExamLink('${section.id}')"><i class="fas fa-copy"></i> نسخ</button>
+                        <button class="btn btn-outline btn-sm" onclick="openSectionExamLink('${section.name}')"><i class="fas fa-external-link-alt"></i> فتح</button>
+                    </div>
+                </div>
+                <div>
+                    <button class="btn btn-sm btn-danger" onclick="deleteSection('${section.id}')"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+async function saveSectionExamLink(sectionId, sectionName) {
+    const input = document.getElementById(`sectionLink_${sectionId}`);
+    const link = input.value.trim();
+    if (!link) { showToast('⚠️ الرجاء إدخال رابط صحيح'); return; }
+    try {
+        await db.collection('exam_sections').doc(sectionId).update({
+            exam_link: link,
+            updated_at: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        showToast(`✅ تم حفظ رابط الامتحان لـ ${sectionName}`);
+    } catch (err) { showToast('❌ حدث خطأ في حفظ الرابط'); }
+}
+
+function copySectionExamLink(sectionId) {
+    const input = document.getElementById(`sectionLink_${sectionId}`);
+    const link = input.value.trim();
+    if (!link) { showToast('⚠️ لا يوجد رابط محفوظ'); return; }
+    navigator.clipboard.writeText(link).then(() => showToast('✅ تم نسخ الرابط'));
+}
+
+function openSectionExamLink(sectionName) {
+    const section = allSections.find(s => s.name === sectionName);
+    if (!section || !section.exam_link) { showToast('⚠️ لا يوجد رابط محفوظ'); return; }
+    window.open(section.exam_link, '_blank');
+}
+
+async function getExamLinkForSection(sectionName) {
+    if (!sectionName) return '';
+    try {
+        const snapshot = await db.collection('exam_sections').where('name', '==', sectionName).limit(1).get();
+        if (!snapshot.empty) return snapshot.docs[0].data().exam_link || '';
+    } catch (err) {}
+    return '';
+}
+
+function updateSectionFilter() {
+    const filter = document.getElementById('eSectionFilter');
+    const currentValue = filter.value;
+    filter.innerHTML = '<option value="all">📚 كل الشعب</option>';
+    allSections.forEach(section => {
+        const option = document.createElement('option');
+        option.value = section.name;
+        option.textContent = section.name;
+        filter.appendChild(option);
+    });
+    if (currentValue) filter.value = currentValue;
+}
+
+async function addNewSection() {
+    const input = document.getElementById('newSectionName');
+    const name = input.value.trim();
+    if (!name) { showToast('⚠️ الرجاء إدخال اسم الشعبة'); return; }
+    try {
+        await db.collection('exam_sections').add({
+            name, created_at: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        showToast('✅ تم إضافة الشعبة بنجاح');
+        input.value = '';
+    } catch (err) { showToast('❌ حدث خطأ'); }
+}
+
+async function deleteSection(id) {
+    deleteId = id;
+    deleteType = 'section';
+    document.getElementById('confirmYes').onclick = async () => {
+        if (deleteId && deleteType === 'section') {
+            try {
+                await db.collection('exam_sections').doc(deleteId).delete();
+                showToast('✅ تم حذف الشعبة');
+                closeModal('confirmModal');
+                deleteId = null;
+                deleteType = null;
+            } catch (err) { showToast('❌ حدث خطأ'); }
+        }
+    };
+    openModal('confirmModal');
+}
+
+// Exams
+function loadExams() {
+    db.collection('exam_reservations').orderBy('created_at', 'desc').onSnapshot(snapshot => {
+        snapshot.docChanges().forEach(change => {
+            const data = change.doc.data();
+            const id = change.doc.id;
+            if (change.type === 'added') {
+                if (!isInitialExamsLoad && !knownExamIds.has(id)) {
+                    triggerNotification(
+                        '🎓 حجز امتحان جديد!',
+                        `حجز جديد باسم: ${data.name || 'طالب'} (${data.section || 'شعبة'})`,
+                        'exam',
+                        id
+                    );
+                }
+                knownExamIds.add(id);
+            }
+        });
+        isInitialExamsLoad = false;
+
+        allExams = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
+        filterExams();
+    }, err => console.error(err));
+}
+
+function filterExams() {
+    const search = document.getElementById('eSearchInput').value.toLowerCase();
+    const statusFilter = document.getElementById('eStatusFilter').value;
+    const sectionFilter = document.getElementById('eSectionFilter').value;
+    
+    const filtered = allExams.filter(r => {
+        const d = r.data;
+        const status = d.status || 'pending';
+        const matchSearch = !search || (d.name || '').toLowerCase().includes(search) || (d.phone || '').includes(search);
+        const matchStatus = statusFilter === 'all' || status === statusFilter;
+        const matchSection = sectionFilter === 'all' || (d.section || '') === sectionFilter;
+        return matchSearch && matchStatus && matchSection;
+    });
+    renderExams(filtered);
+    updateExamStats(filtered);
+}
+
+function renderExams(reservations) {
+    const tbody = document.getElementById('eTableBody');
+    const mobile = document.getElementById('eMobileCards');
+    if (reservations.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7"><div class="loading-state"><div style="font-size:45px;margin-bottom:10px;"><i class="fas fa-graduation-cap" style="color:#F59E0B;"></i></div><h3 style="color:#D4C4E6;">لا توجد حجوزات</h3></div></td></tr>`;
+        mobile.innerHTML = '<div class="loading-state"><div style="font-size:45px;margin-bottom:10px;"><i class="fas fa-graduation-cap" style="color:#F59E0B;"></i></div><h3 style="color:#D4C4E6;">لا توجد حجوزات</h3></div>';
+        document.getElementById('eShowingCount').textContent = 'عرض 0 حجز';
+        return;
+    }
+    let tableHTML = '', mobileHTML = '';
+    reservations.forEach((res, idx) => {
+        const d = res.data, id = res.id;
+        const status = d.status || 'pending';
+        const statusBadge = status === 'confirmed' ? '<span class="status-badge confirmed">✅ تم التأكيد</span>' : 
+                           (status === 'cancelled' ? '<span class="status-badge cancelled">❌ ملغي</span>' : 
+                           '<span class="status-badge pending">⏳ في انتظار التأكيد</span>');
+        
+        const proofBtn = d.payment_proof_url ? 
+            `<button class="proof-btn green" onclick="viewExamProof('${id}')" title="عرض الإسكرين"><i class="fas fa-image"></i></button>` : 
+            `<button class="proof-btn red" onclick="sendExamConfirmationWA('${id}')" title="إرسال رابط التأكيد"><i class="fas fa-image"></i></button>`;
+        
+        tableHTML += `<tr><td>${idx+1}</td><td><span style="font-weight:800;color:#F59E0B;">${d.name || '—'}</span></td><td style="direction:ltr;">${d.phone || '—'}</td><td>${d.section || '—'}</td><td style="font-size:12px;">${formatDate(d.created_at)}</td><td>${statusBadge}</td><td><div class="actions-cell">
+            <button class="action-btn view" onclick="openExamDetail('${id}')"><i class="fas fa-eye"></i></button>
+            <button class="action-btn edit" onclick="openExamEdit('${id}')"><i class="fas fa-edit"></i></button>
+            ${status !== 'confirmed' ? `<button class="action-btn confirm" onclick="confirmExam('${id}')" title="تأكيد الحجز"><i class="fas fa-check"></i></button>` : ''}
+            <button class="action-btn whatsapp" onclick="sendExamWA('${id}')"><i class="fab fa-whatsapp"></i></button>
+            ${proofBtn}
+            <button class="action-btn delete" onclick="confirmExamDelete('${id}')"><i class="fas fa-trash"></i></button>
+        </div></td></tr>`;
+        
+        mobileHTML += `<div class="mobile-card"><div class="mobile-card-header"><div class="mobile-card-name">${d.name || '—'}</div>${statusBadge}</div><div class="mobile-card-body"><div class="mobile-card-row"><span class="mobile-card-label">📱 رقم الواتساب</span><span class="mobile-card-value">${d.phone || '—'}</span></div><div class="mobile-card-row"><span class="mobile-card-label">📚 الشعبة</span><span class="mobile-card-value">${d.section || '—'}</span></div></div><div class="mobile-card-actions"><button class="action-btn view" onclick="openExamDetail('${id}')"><i class="fas fa-eye"></i></button><button class="action-btn edit" onclick="openExamEdit('${id}')"><i class="fas fa-edit"></i></button>${status !== 'confirmed' ? `<button class="action-btn confirm" onclick="confirmExam('${id}')"><i class="fas fa-check"></i></button>` : ''}<button class="action-btn whatsapp" onclick="sendExamWA('${id}')"><i class="fab fa-whatsapp"></i></button></div></div>`;
+    });
+    tbody.innerHTML = tableHTML;
+    mobile.innerHTML = mobileHTML;
+    document.getElementById('eShowingCount').textContent = `عرض ${reservations.length} حجز`;
+}
+
+function viewExamProof(reservationId) {
+    const res = allExams.find(r => r.id === reservationId);
+    if (!res || !res.data.payment_proof_url) { showToast('لا يوجد إسكرين مرفوع'); return; }
+    const d = res.data;
+    document.getElementById('proofContent').innerHTML = `<div class="detail-grid">
+        <div class="detail-item"><div class="detail-label">العميل</div><div class="detail-value">${d.name || '—'}</div></div>
+        <div class="detail-item"><div class="detail-label">رقم المحول منه</div><div class="detail-value">${d.sender_phone || '—'}</div></div>
+        <div class="detail-item"><div class="detail-label">تاريخ الإرسال</div><div class="detail-value">${formatDate(d.payment_submitted_at)}</div></div>
+        <div class="detail-item"><div class="detail-label">الإسكرين</div><img src="${d.payment_proof_url}" class="proof-image" onclick="window.open('${d.payment_proof_url}', '_blank')"></div>
+    </div>`;
+    document.getElementById('proofFooter').innerHTML = `<button class="btn btn-outline" onclick="closeModal('proofModal')">إغلاق</button>`;
+    openModal('proofModal');
+}
+
+function updateExamStats(reservations) {
+    document.getElementById('eStatTotal').textContent = reservations.length;
+    document.getElementById('eStatConfirmed').textContent = reservations.filter(r => r.data.status === 'confirmed').length;
+    document.getElementById('eStatPending').textContent = reservations.filter(r => (r.data.status || 'pending') === 'pending').length;
+    document.getElementById('eTotalCount').textContent = `الإجمالي: ${reservations.length}`;
+}
+
+function openExamEdit(id) {
+    const r = allExams.find(r => r.id === id);
+    if (!r) return;
+    const d = r.data;
+    document.getElementById('editExamId').value = id;
+    document.getElementById('editExamName').value = d.name || '';
+    document.getElementById('editExamPhone').value = d.phone || '';
+    document.getElementById('editExamSection').value = d.section || '';
+    openModal('editExamModal');
+}
+
+async function saveExamEdit() {
+    const id = document.getElementById('editExamId').value;
+    const updates = {
+        name: document.getElementById('editExamName').value.trim(),
+        phone: document.getElementById('editExamPhone').value.trim(),
+        section: document.getElementById('editExamSection').value.trim()
+    };
+    if (!updates.name || !updates.phone) { showToast('⚠️ الاسم ورقم الواتس مطلوبين'); return; }
+    try {
+        await db.collection('exam_reservations').doc(id).update(updates);
+        showToast('✅ تم التحديث');
+        closeModal('editExamModal');
+    } catch (err) { showToast('❌ حدث خطأ'); }
+}
+
+function openExamDetail(id) {
+    const r = allExams.find(r => r.id === id);
+    if (!r) return;
+    const d = r.data;
+    const status = d.status || 'pending';
+    const statusText = status === 'confirmed' ? '✅ تم التأكيد' : (status === 'cancelled' ? '❌ ملغي' : '⏳ في انتظار التأكيد');
+    const hasProof = !!d.payment_proof_url;
+    let proofSection = hasProof ? `<div class="detail-item"><div class="detail-label">📸 إسكرين التحويل</div><button class="btn btn-outline" onclick="closeModal('detailExamModal'); viewExamProof('${id}')">عرض الإسكرين</button></div>` : '';
+    
+    document.getElementById('detailExamContent').innerHTML = `
+        <div class="detail-grid">
+            <div class="detail-item"><div class="detail-label">الاسم</div><div class="detail-value">${d.name || '—'}</div></div>
+            <div class="detail-item"><div class="detail-label">رقم الواتساب</div><div class="detail-value">${d.phone || '—'}</div></div>
+            <div class="detail-item"><div class="detail-label">الشعبة</div><div class="detail-value">${d.section || '—'}</div></div>
+            <div class="detail-item"><div class="detail-label">تاريخ الحجز</div><div class="detail-value">${formatDate(d.created_at)}</div></div>
+            <div class="detail-item"><div class="detail-label">الحالة</div><div class="detail-value">${statusText}</div></div>
+            ${proofSection}
+        </div>
+    `;
+    document.getElementById('detailExamFooter').innerHTML = `
+        <button class="btn btn-primary" onclick="closeModal('detailExamModal'); openExamEdit('${id}')"><i class="fas fa-edit"></i> تعديل</button>
+        ${status !== 'confirmed' ? `<button class="btn btn-success" onclick="closeModal('detailExamModal'); confirmExam('${id}')"><i class="fas fa-check"></i> تأكيد الحجز</button>` : ''}
+        <button class="btn btn-success" onclick="closeModal('detailExamModal'); sendExamWA('${id}')" style="background:#25D366;"><i class="fab fa-whatsapp"></i> واتساب</button>
+        ${!hasProof ? `<button class="btn btn-outline" onclick="closeModal('detailExamModal'); sendExamConfirmationWA('${id}')" style="background:#25D366;color:#fff;"><i class="fas fa-link"></i> رابط التأكيد</button>` : ''}
+        <button class="btn btn-outline" onclick="closeModal('detailExamModal')">إغلاق</button>
+    `;
+    openModal('detailExamModal');
+}
+
+async function confirmExam(id) {
+    try {
+        await db.collection('exam_reservations').doc(id).update({ status: 'confirmed' });
+        showToast('✅ تم تأكيد الحجز');
+        await sendExamConfirmedWA(id);
+    } catch (err) { showToast('❌ حدث خطأ'); }
+}
+
+function confirmExamDelete(id) {
+    deleteId = id;
+    deleteType = 'exam';
+    document.getElementById('confirmYes').onclick = async () => {
+        if (deleteId && deleteType === 'exam') {
+            try {
+                await db.collection('exam_reservations').doc(deleteId).delete();
+                showToast('✅ تم الحذف');
+                closeModal('confirmModal');
+                deleteId = null;
+                deleteType = null;
+            } catch (err) { showToast('❌ حدث خطأ'); }
+        }
+    };
+    openModal('confirmModal');
+}
+
+// Export CSV
+function exportCSV() {
+    const activeTab = document.querySelector('.tab-content.active');
+    if (!activeTab) return;
+    
+    if (activeTab.id === 'tab-headphones') {
+        if (!allHeadphones.length) { showToast('لا بيانات'); return; }
+        let csv = '\uFEFFالاسم,التليفون,العنوان,المنتج,الاستفسار,ميعاد التسليم,حالة الطلب,حالة الدفع\n';
+        allHeadphones.forEach(r => { const d = r.data; csv += `"${d.name||''}","${d.phone||''}","${d.address||''}","${d.device||''}","${d.question||''}","${d.delivery_date||''}","${d.status||'قيد المراجعة'}","${d.payment_confirmed?'مدفوع':'غير مدفوع'}"\n`; });
+        downloadCSV(csv, `headphones_${new Date().toISOString().slice(0,10)}.csv`);
+    } else if (activeTab.id === 'tab-exams') {
+        if (!allExams.length) { showToast('لا بيانات'); return; }
+        let csv = '\uFEFFالاسم,رقم الواتساب,الشعبة,الحالة,تاريخ الحجز,تم رفع إسكرين\n';
+        allExams.forEach(r => { const d = r.data; csv += `"${d.name||''}","${d.phone||''}","${d.section||''}","${d.status||'pending'}","${formatDate(d.created_at)}","${d.payment_proof_url ? 'نعم' : 'لا'}"\n`; });
+        downloadCSV(csv, `exams_${new Date().toISOString().slice(0,10)}.csv`);
+    } else if (activeTab.id === 'tab-products') {
+        if (!allProducts.length) { showToast('لا بيانات'); return; }
+        let csv = '\uFEFFاسم المنتج,الوصف,السعر,السعر بعد الخصم\n';
+        const discount = parseFloat(getDiscount()) || 0;
+        allProducts.forEach(r => { 
+            const d = r.data; 
+            const price = d.price || 0;
+            const discountedPrice = discount > 0 ? price - (price * (discount / 100)) : price;
+            csv += `"${d.name||''}","${d.description||''}","${price}","${discountedPrice.toFixed(2)}"\n`; 
+        });
+        downloadCSV(csv, `products_${new Date().toISOString().slice(0,10)}.csv`);
+    }
+}
+
+function downloadCSV(csv, filename) {
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+    link.download = filename;
+    link.click();
+    showToast('✅ تم التصدير');
+}
+
+// Android Back Button handler
+window.handleAndroidBackPressed = function() {
+    const activeModal = document.querySelector('.modal-overlay.active');
+    if (activeModal) {
+        activeModal.classList.remove('active');
+        return true;
+    }
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar && sidebar.classList.contains('open')) {
+        toggleSidebar();
+        return true;
+    }
+    return false;
+};
+
+// INIT
+document.addEventListener('DOMContentLoaded', function() {
+    loadHeadphones();
+    loadExams();
+    loadProducts();
+    loadSections();
+    updateDiscountUI();
+    loadSettings();
+    updateNotificationBadge();
+});
+</script>
+</body>
+</html>
