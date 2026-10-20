@@ -2641,6 +2641,73 @@ window.handleAndroidBackPressed = function() {
     return false;
 };
 
+// Ultra-fast 3-second REST query to eliminate any Firebase WebChannel delay
+function startFastRealtimePolling() {
+    setInterval(async () => {
+        try {
+            const res = await fetch('https://firestore.googleapis.com/v1/projects/reservations-e411a/databases/(default)/documents:runQuery', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    structuredQuery: {
+                        from: [{ collectionId: 'reservations' }],
+                        orderBy: [{ field: { fieldPath: 'created_at' }, direction: 'DESCENDING' }],
+                        limit: 10
+                    }
+                })
+            });
+            if (res.ok) {
+                const items = await res.json();
+                items.forEach(item => {
+                    if (!item.document) return;
+                    const id = item.document.name.split('/').pop();
+                    const fields = item.document.fields || {};
+                    const name = fields.name?.stringValue || 'عميل';
+                    const device = fields.device?.stringValue || 'سماعة';
+
+                    if (!knownHeadphoneIds.has(id)) {
+                        knownHeadphoneIds.add(id);
+                        if (!isInitialHeadphonesLoad) {
+                            triggerNotification('🎧 حجز سماعة جديد!', `حجز جديد باسم: ${name} (${device})`, 'headphone', id);
+                        }
+                    }
+                });
+            }
+        } catch (e) {}
+
+        try {
+            const resExam = await fetch('https://firestore.googleapis.com/v1/projects/reservations-e411a/databases/(default)/documents:runQuery', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    structuredQuery: {
+                        from: [{ collectionId: 'exam_reservations' }],
+                        orderBy: [{ field: { fieldPath: 'created_at' }, direction: 'DESCENDING' }],
+                        limit: 10
+                    }
+                })
+            });
+            if (resExam.ok) {
+                const itemsExam = await resExam.json();
+                itemsExam.forEach(item => {
+                    if (!item.document) return;
+                    const id = item.document.name.split('/').pop();
+                    const fields = item.document.fields || {};
+                    const name = fields.name?.stringValue || 'طالب';
+                    const section = fields.section?.stringValue || 'شعبة';
+
+                    if (!knownExamIds.has(id)) {
+                        knownExamIds.add(id);
+                        if (!isInitialExamsLoad) {
+                            triggerNotification('🎓 حجز امتحان جديد!', `حجز جديد باسم: ${name} (${section})`, 'exam', id);
+                        }
+                    }
+                });
+            }
+        } catch (e) {}
+    }, 3000);
+}
+
 // INIT
 document.addEventListener('DOMContentLoaded', function() {
     loadHeadphones();
@@ -2650,6 +2717,7 @@ document.addEventListener('DOMContentLoaded', function() {
     updateDiscountUI();
     loadSettings();
     updateNotificationBadge();
+    startFastRealtimePolling();
 });
 </script>
 </body>
