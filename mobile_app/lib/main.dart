@@ -58,7 +58,7 @@ Future<void> showOrderAlertNotification(
   }
 }
 
-// Background Polling Worker
+// Background Polling Worker using fast runQuery (Ordered by created_at DESC)
 Future<void> pollFirestoreReservations(
     FlutterLocalNotificationsPlugin notifications) async {
   try {
@@ -72,16 +72,36 @@ Future<void> pollFirestoreReservations(
         prefs.getStringList('seen_proof_ids') ?? [];
     bool isFirstRun = prefs.getBool('is_bg_first_run') ?? true;
 
-    // 1. Fetch Headphones reservations
+    // 1. Fetch Headphones reservations via runQuery (Instant 0-delay descending query)
     try {
-      final hUrl = Uri.parse(
-          'https://firestore.googleapis.com/v1/projects/reservations-e411a/databases/(default)/documents/reservations?pageSize=50');
-      final res = await http.get(hUrl).timeout(const Duration(seconds: 10));
-      if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
-        final List documents = (data['documents'] as List?) ?? [];
+      final runQueryUrl = Uri.parse(
+          'https://firestore.googleapis.com/v1/projects/reservations-e411a/databases/(default)/documents:runQuery');
+      final res = await http.post(
+        runQueryUrl,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'structuredQuery': {
+            'from': [
+              {'collectionId': 'reservations'}
+            ],
+            'orderBy': [
+              {
+                'field': {'fieldPath': 'created_at'},
+                'direction': 'DESCENDING'
+              }
+            ],
+            'limit': 20
+          }
+        }),
+      ).timeout(const Duration(seconds: 4));
 
-        for (final doc in documents) {
+      if (res.statusCode == 200) {
+        final List items = jsonDecode(res.body);
+
+        for (final item in items) {
+          final doc = item['document'];
+          if (doc == null) continue;
+
           final String namePath = doc['name'] ?? '';
           final String docId = namePath.split('/').last;
           final fields = doc['fields'] ?? {};
@@ -102,7 +122,7 @@ Future<void> pollFirestoreReservations(
             }
           }
 
-          // Check for new payment screenshot
+          // Check for payment screenshot
           if (proofUrl != null &&
               proofUrl.isNotEmpty &&
               !seenProofs.contains(docId)) {
@@ -122,16 +142,36 @@ Future<void> pollFirestoreReservations(
       debugPrint('Error polling headphones: $e');
     }
 
-    // 2. Fetch Exams reservations
+    // 2. Fetch Exams reservations via runQuery
     try {
-      final eUrl = Uri.parse(
-          'https://firestore.googleapis.com/v1/projects/reservations-e411a/databases/(default)/documents/exam_reservations?pageSize=50');
-      final res = await http.get(eUrl).timeout(const Duration(seconds: 10));
-      if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
-        final List documents = (data['documents'] as List?) ?? [];
+      final runQueryUrl = Uri.parse(
+          'https://firestore.googleapis.com/v1/projects/reservations-e411a/databases/(default)/documents:runQuery');
+      final res = await http.post(
+        runQueryUrl,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'structuredQuery': {
+            'from': [
+              {'collectionId': 'exam_reservations'}
+            ],
+            'orderBy': [
+              {
+                'field': {'fieldPath': 'created_at'},
+                'direction': 'DESCENDING'
+              }
+            ],
+            'limit': 20
+          }
+        }),
+      ).timeout(const Duration(seconds: 4));
 
-        for (final doc in documents) {
+      if (res.statusCode == 200) {
+        final List items = jsonDecode(res.body);
+
+        for (final item in items) {
+          final doc = item['document'];
+          if (doc == null) continue;
+
           final String namePath = doc['name'] ?? '';
           final String docId = namePath.split('/').last;
           final fields = doc['fields'] ?? {};
@@ -159,6 +199,11 @@ Future<void> pollFirestoreReservations(
     if (isFirstRun) {
       await prefs.setBool('is_bg_first_run', false);
     }
+    // Keep max 200 IDs in history
+    if (seenHeadphones.length > 200) seenHeadphones = seenHeadphones.sublist(seenHeadphones.length - 200);
+    if (seenExams.length > 200) seenExams = seenExams.sublist(seenExams.length - 200);
+    if (seenProofs.length > 200) seenProofs = seenProofs.sublist(seenProofs.length - 200);
+
     await prefs.setStringList('seen_headphone_ids', seenHeadphones);
     await prefs.setStringList('seen_exam_ids', seenExams);
     await prefs.setStringList('seen_proof_ids', seenProofs);
@@ -172,6 +217,23 @@ Future<void> pollFirestoreReservations(
 void onBackgroundServiceStart(ServiceInstance service) async {
   DartPluginRegistrant.ensureInitialized();
   WidgetsFlutterBinding.ensureInitialized();
+
+  // MUST mark as Foreground Service on Android immediately!
+  if (service is AndroidServiceInstance) {
+    service.on('setAsForeground').listen((event) {
+      service.setAsForegroundService();
+    });
+
+    service.on('setAsBackground').listen((event) {
+      service.setAsBackgroundService();
+    });
+
+    service.setAsForegroundService();
+    service.setForegroundNotificationInfo(
+      title: 'Abo Zahra Admin',
+      content: 'خدمة مراقبة الحجوزات نشطة وتعمل بالخلفية 24/7',
+    );
+  }
 
   final FlutterLocalNotificationsPlugin bgNotifications =
       FlutterLocalNotificationsPlugin();
@@ -199,8 +261,8 @@ void onBackgroundServiceStart(ServiceInstance service) async {
     await androidPlugin.createNotificationChannel(alertChannel);
   }
 
-  // Periodic polling every 15 seconds
-  Timer.periodic(const Duration(seconds: 15), (timer) async {
+  // Periodic fast polling every 3 seconds!
+  Timer.periodic(const Duration(seconds: 3), (timer) async {
     await pollFirestoreReservations(bgNotifications);
   });
 }
@@ -220,7 +282,7 @@ Future<void> initializeBackgroundService() async {
     const AndroidNotificationChannel bgChannel = AndroidNotificationChannel(
       kForegroundServiceChannelId,
       kForegroundServiceChannelName,
-      description: 'إشعار صامت للحفاظ على عمل خدمة مراقبة الحجوزات بالخلفية 24/7',
+      description: 'إشعار للحفاظ على عمل خدمة مراقبة الحجوزات بالخلفية 24/7',
       importance: Importance.low,
       playSound: false,
       enableVibration: false,
@@ -248,7 +310,9 @@ Future<void> initializeBackgroundService() async {
       ),
     );
 
-    await service.startService();
+    if (!await service.isRunning()) {
+      await service.startService();
+    }
   } catch (e) {
     debugPrint('Background service init error: $e');
   }
@@ -267,9 +331,6 @@ void main() async {
     systemNavigationBarColor: Color(0xFF0F0A1A),
     systemNavigationBarIconBrightness: Brightness.light,
   ));
-
-  // Initialize background service
-  await initializeBackgroundService();
 
   runApp(const AboZahraApp());
 }
@@ -323,10 +384,13 @@ class _DashboardWebViewScreenState extends State<DashboardWebViewScreen> {
         await Permission.notification.request();
       }
 
+      // Initialize AND start background service once permission flow completes
+      await initializeBackgroundService();
+
       // 2. Request Ignore Battery Optimizations so OS doesn't kill the background listener
       final batteryStatus = await Permission.ignoreBatteryOptimizations.status;
       if (!batteryStatus.isGranted) {
-        await Future.delayed(const Duration(seconds: 2));
+        await Future.delayed(const Duration(seconds: 1));
         await Permission.ignoreBatteryOptimizations.request();
       }
     } catch (e) {
@@ -445,6 +509,17 @@ class _DashboardWebViewScreenState extends State<DashboardWebViewScreen> {
       final data = jsonDecode(rawJson);
       final String title = data['title'] ?? 'إشعار جديد - Abo Zahra';
       final String message = data['message'] ?? '';
+      final String? targetId = data['targetId'];
+
+      if (targetId != null && targetId.isNotEmpty) {
+        final prefs = await SharedPreferences.getInstance();
+        final seen = prefs.getStringList('seen_headphone_ids') ?? [];
+        if (!seen.contains(targetId)) {
+          seen.add(targetId);
+          await prefs.setStringList('seen_headphone_ids', seen);
+        }
+      }
+
       await _triggerHeadsUpNotification(title, message);
     } catch (e) {
       await _triggerHeadsUpNotification('إشعار Abo Zahra', rawJson);
