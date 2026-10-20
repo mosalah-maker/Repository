@@ -1106,7 +1106,10 @@
             <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
             <h1 id="pageTitle"><i class="fas fa-crown" style="color:#F59E0B;"></i> لوحة تحكم Abo Zahra</h1>
         </div>
-        <div class="top-bar-actions">
+        <div class="top-bar-actions" style="display:flex; align-items:center; gap:8px;">
+            <button class="btn btn-gold btn-sm" onclick="testNotification()" style="font-size:12px; padding:6px 14px;" title="اختبار إشعار فوري على الهاتف">
+                <i class="fas fa-paper-plane"></i> اختبار إشعار
+            </button>
             <button class="notif-bell-btn" onclick="openNotificationsModal()" title="الإشعارات">
                 <i class="fas fa-bell"></i>
                 <span class="notif-badge-count" id="notifBadge">0</span>
@@ -1419,13 +1422,15 @@ function triggerNotification(title, message, type = 'info', targetId = null) {
     // 1. Play chime sound
     playNotificationSound();
 
-    // 2. Flutter JavaScript Channel Bridge
-    if (window.NotificationBridge && typeof window.NotificationBridge.postMessage === 'function') {
-        try {
+    // 2. Flutter JavaScript Channel Bridge (Native Android Heads-Up Notification)
+    try {
+        if (window.NotificationBridge && typeof window.NotificationBridge.postMessage === 'function') {
             window.NotificationBridge.postMessage(JSON.stringify({ title, message, type, targetId }));
-        } catch (e) {
-            console.error('NotificationBridge error:', e);
+        } else if (typeof NotificationBridge !== 'undefined' && typeof NotificationBridge.postMessage === 'function') {
+            NotificationBridge.postMessage(JSON.stringify({ title, message, type, targetId }));
         }
+    } catch (e) {
+        console.error('NotificationBridge error:', e);
     }
 
     // 3. Native Android Interface Bridge
