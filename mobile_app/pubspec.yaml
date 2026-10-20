@@ -1,7 +1,7 @@
 name: abuzahra_admin
 description: "تطبيق لوحة تحكم أبو زهرة لإدارة الحجوزات"
 publish_to: 'none'
-version: 1.0.0+2
+version: 1.0.0+3
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -11,6 +11,7 @@ dependencies:
     sdk: flutter
   webview_flutter: ^4.10.0
   flutter_local_notifications: ^17.2.3
+  permission_handler: ^11.3.1
   url_launcher: ^6.3.1
 
 dev_dependencies:
