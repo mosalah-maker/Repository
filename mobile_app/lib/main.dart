@@ -8,8 +8,13 @@ import 'package:url_launcher/url_launcher.dart';
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Catch any unexpected flutter framework errors safely
+  FlutterError.onError = (FlutterErrorDetails details) {
+    debugPrint('Safe Flutter Error: ${details.exceptionAsString()}');
+  };
 
   // Modern transparent status bar
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
@@ -19,38 +24,7 @@ void main() async {
     systemNavigationBarIconBrightness: Brightness.light,
   ));
 
-  // Initialize Native Android Notifications
-  const AndroidInitializationSettings initializationSettingsAndroid =
-      AndroidInitializationSettings('@mipmap/ic_launcher');
-  const InitializationSettings initializationSettings =
-      InitializationSettings(android: initializationSettingsAndroid);
-
-  await flutterLocalNotificationsPlugin.initialize(
-    initializationSettings,
-    onDidReceiveNotificationResponse: (NotificationResponse response) {
-      // Tap on notification
-    },
-  );
-
-  // Create dedicated High Importance Notification Channel for Abo Zahra
-  const AndroidNotificationChannel channel = AndroidNotificationChannel(
-    'abozahra_reservations_v2',
-    'حجوزات وإشعارات أبو زهرة',
-    description: 'تنبيهات فورية عند وصول حجز جديد أو رفع إسكرين دفع',
-    importance: Importance.max,
-    playSound: true,
-    enableVibration: true,
-  );
-
-  final AndroidFlutterLocalNotificationsPlugin? androidPlugin =
-      flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
-
-  if (androidPlugin != null) {
-    await androidPlugin.createNotificationChannel(channel);
-    await androidPlugin.requestNotificationsPermission();
-  }
-
+  // Run the application immediately without blocking
   runApp(const AboZahraApp());
 }
 
@@ -92,6 +66,44 @@ class _DashboardWebViewScreenState extends State<DashboardWebViewScreen> {
   void initState() {
     super.initState();
     _initController();
+    _initNotificationsSafely();
+  }
+
+  Future<void> _initNotificationsSafely() async {
+    try {
+      const AndroidInitializationSettings initializationSettingsAndroid =
+          AndroidInitializationSettings('@mipmap/ic_launcher');
+      const InitializationSettings initializationSettings =
+          InitializationSettings(android: initializationSettingsAndroid);
+
+      await flutterLocalNotificationsPlugin.initialize(
+        initializationSettings,
+        onDidReceiveNotificationResponse: (NotificationResponse response) {
+          // Tap on notification
+        },
+      );
+
+      final AndroidFlutterLocalNotificationsPlugin? androidPlugin =
+          flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+
+      if (androidPlugin != null) {
+        const AndroidNotificationChannel channel = AndroidNotificationChannel(
+          'abozahra_reservations_v2',
+          'حجوزات وإشعارات أبو زهرة',
+          description: 'تنبيهات فورية عند وصول حجز جديد أو رفع إسكرين دفع',
+          importance: Importance.max,
+          playSound: true,
+          enableVibration: true,
+        );
+        await androidPlugin.createNotificationChannel(channel);
+        try {
+          await androidPlugin.requestNotificationsPermission();
+        } catch (_) {}
+      }
+    } catch (e) {
+      debugPrint('Notification setup error (handled safely): $e');
+    }
   }
 
   void _initController() {
@@ -112,6 +124,9 @@ class _DashboardWebViewScreenState extends State<DashboardWebViewScreen> {
           },
           onPageFinished: (String url) {
             if (mounted) setState(() => _isLoading = false);
+          },
+          onWebResourceError: (WebResourceError error) {
+            debugPrint('Web resource error (handled): ${error.description}');
           },
           onNavigationRequest: (NavigationRequest request) async {
             final url = request.url;
@@ -136,15 +151,14 @@ class _DashboardWebViewScreenState extends State<DashboardWebViewScreen> {
               } catch (_) {}
             }
 
-            // Handle other external links (like ImgBB or GitHub)
+            // Handle external links (ImgBB, GitHub, etc.)
             if (url.startsWith('http://') || url.startsWith('https://')) {
-              if (!url.contains('localhost') && !url.contains('127.0.0.1')) {
-                // If opening external pages in browser
-                if (url.contains('imgbb.com') || url.contains('github.io')) {
+              if (url.contains('imgbb.com') || url.contains('github.io')) {
+                try {
                   final uri = Uri.parse(url);
                   await launchUrl(uri, mode: LaunchMode.externalApplication);
                   return NavigationDecision.prevent;
-                }
+                } catch (_) {}
               }
             }
 
@@ -157,8 +171,22 @@ class _DashboardWebViewScreenState extends State<DashboardWebViewScreen> {
         onMessageReceived: (JavaScriptMessage message) {
           _handleJavaScriptNotification(message.message);
         },
-      )
-      ..loadFlutterAsset('assets/www/index.html');
+      );
+
+    _loadContent();
+  }
+
+  Future<void> _loadContent() async {
+    try {
+      final htmlContent = await rootBundle.loadString('assets/www/index.html');
+      await _controller.loadHtmlString(
+        htmlContent,
+        baseUrl: 'https://reservations-e411a.firebaseapp.com',
+      );
+    } catch (e) {
+      debugPrint('Fallback loading asset: $e');
+      _controller.loadFlutterAsset('assets/www/index.html');
+    }
   }
 
   Future<void> _handleJavaScriptNotification(String rawJson) async {
