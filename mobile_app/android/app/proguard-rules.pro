@@ -1,0 +1,6 @@
+-keep class io.flutter.** { *; }
+-keep class com.abuzahra.admin.** { *; }
+-keep class com.dexterous.flutterlocalnotifications.** { *; }
+-keep class io.flutter.plugins.urllauncher.** { *; }
+-keep class io.flutter.plugins.webviewflutter.** { *; }
+-dontwarn **
